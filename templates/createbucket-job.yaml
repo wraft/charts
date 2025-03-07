@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-create-bucket
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: create-bucket
+        image: minio/mc:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          mc --help > /dev/null 2>&1 || {
+            apk add --no-cache mc
+          }
+          mc config host add myminio http://minio.local:30080 minioadmin minioadmin
+          mc mb -p myminio/wraft
+          mc policy set public myminio/wraft
+          exit 0
+      restartPolicy: Never
+

@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.minio.name }}-ingress
+  labels:
+    {{- include "wraft.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: {{ .Values.ingress.className | default "nginx" }}
+  rules:
+    - host: {{ index (index .Values.ingress.hosts 0) "host" | quote }}
+      http:
+        paths:
+          - path: {{ index (index .Values.ingress.hosts 0) "paths" 0 "path" | default "/" | quote }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.minio.name }}
+                port:
+                  number: {{ index .Values.minio.service.ports 0 "port" }}  # Ensure correct indexing
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+

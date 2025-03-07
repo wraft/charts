@@ -1,0 +1,168 @@
+# values.yaml
+# Configuration file for the WRAFT application Helm chart.
+# This file defines the customizable parameters for deploying the WRAFT stack,
+global:
+  # Global configuration parameters shared across all components.
+  domain: ''
+  storageClass: '' # Default storage class for persistent volumes.
+
+frontend:
+  name: wraft-frontend
+  image:
+    repository: quay.io/wraft/wraft-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: NodePort
+    port: 3000
+    targetPort: 3000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+backend:
+  name: wraft-backend
+  image:
+    repository: aurut/wraft-docs-api-v1
+    tag: v0.18.3
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 4000
+    targetPort: 4000
+  env:
+    MIX_ENV: 'prod'
+    SECRET_KEY_BASE:
+      valueFrom:
+        secretKeyRef:
+          name: wraft-secrets
+          key: SECRET_KEY_BASE # Add secret your key.
+    GUARDIAN_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: wraft-secrets
+          key: GUARDIAN_KEY # Add secret your key.
+    DATABASE_URL: 'postgres://{{ .Values.db.env.POSTGRES_USER }}:{{ .Values.db.env.POSTGRES_PASSWORD }}@{{ .Values.db.name }}:{{ .Values.db.service.port }}/{{ .Values.db.env.POSTGRES_DB }}?ssl=false'
+    MINIO_URL: 'http://minio.local:30080' # set ingess url for local deployment
+    MINIO_HOST: 'minio.local'
+    MINIO_PORT: '30080'
+    MINIO_BUCKET: 'wraft'
+    MINIO_ROOT_USER: '{{ .Values.minio.env.MINIO_ROOT_USER }}'
+    MINIO_ROOT_PASSWORD: '{{ .Values.minio.env.MINIO_ROOT_PASSWORD }}'
+    SENTRY_DSN: 'https://public_key@app.getsentry.com/1'
+    XELATEX_PATH: 'xelatex'
+    TYPESENSE_API_KEY: '{{ .Values.typesense.env.TYPESENSE_API_KEY }}'
+    TYPESENSE_HOST: '{{ .Values.typesense.name }}'
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+db:
+  # Configuration for the PostgreSQL database.
+  name: wraft-db
+  image:
+    repository: postgres
+    tag: 14-alpine
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5432
+    targetPort: 5432
+  env:
+    POSTGRES_USER: 'postgres'
+    POSTGRES_PASSWORD: 'postgres'
+    POSTGRES_DB: 'wraft_data'
+  persistence:
+    enabled: true
+    storageClass: ''
+    size: 1Gi
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+minio:
+  # Configuration for the MinIO object storage service.
+  name: wraft-minio
+  image:
+    repository: quay.io/minio/minio
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: NodePort
+    ports:
+      - name: api
+        port: 9000
+        targetPort: 9000
+      - name: console
+        port: 9001
+        targetPort: 9001
+  command:
+    - 'minio'
+    - 'server'
+    - '/data'
+    - '--console-address=:9001'
+  env:
+    MINIO_ROOT_USER: 'minioadmin'
+    MINIO_ROOT_PASSWORD: 'minioadmin'
+    MINIO_SERVER_URL: 'http://minio.local:30080'
+  persistence:
+    enabled: true
+    storageClass: ''
+    size: 1Gi
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+typesense:
+  # Configuration for the Typesense search service
+  enabled: true
+  name: wraft-typesense
+  image:
+    repository: typesense/typesense
+    tag: 28.0.rc35
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    name: wraft-typesense-service
+    type: ClusterIP
+    port: 8108
+  env:
+    TYPESENSE_DATA_DIR: '/data'
+    TYPESENSE_API_KEY: 'xyz'
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    storageClass: ''
+
+ingress:
+  # Configuration for the Kubernetes Ingress resource.
+  enabled: true
+  className: 'nginx'
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: 'minio.local'
+      paths:
+        - path: '/'
+          pathType: Prefix
+  tls: []

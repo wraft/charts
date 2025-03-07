@@ -1,0 +1,48 @@
+{{- if .Values.db.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.db.name }}-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.db.persistence.storageClass }}
+  storageClassName: {{ .Values.db.persistence.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.db.persistence.size }}
+{{- end }}
+---
+{{- if .Values.minio.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.minio.name }}-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.minio.persistence.storageClass }}
+  storageClassName: {{ .Values.minio.persistence.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.minio.persistence.size }}
+{{- end }}
+---
+{{- if .Values.typesense.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.typesense.name }}-pvc
+spec:
+  accessModes:
+    - {{ .Values.typesense.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.typesense.persistence.size }}
+  {{- if .Values.typesense.persistence.storageClass }}
+  storageClassName: {{ .Values.typesense.persistence.storageClass }}
+  {{- end }}
+---
+{{- end }}

@@ -1,0 +1,226 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.frontend.name }}
+  labels:
+    {{- include "wraft.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.frontend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.frontend.name }}
+    spec:
+      containers:
+        - name: {{ .Values.frontend.name }}
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.service.targetPort }}
+          env:
+            {{- range $key, $value := .Values.frontend.env }}
+            - name: {{ $key }}
+              {{- if kindIs "map" $value }}
+              {{- if hasKey $value "valueFrom" }}
+              valueFrom:
+                {{- $value.valueFrom | toYaml | nindent 16 }}
+              {{- else }}
+              {{- toYaml $value | nindent 14 }}
+              {{- end }}
+              {{- else }}
+              value: {{ $value | quote }}
+              {{- end }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  labels:
+    {{- include "wraft.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+    spec:
+      containers:
+        - name: {{ .Values.backend.name }}
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.service.targetPort }}
+          env:
+            {{- range $key, $value := .Values.backend.env }}
+            - name: {{ $key }}
+              {{- if kindIs "map" $value }}
+              {{- if hasKey $value "valueFrom" }}
+              valueFrom:
+                {{- $value.valueFrom | toYaml | nindent 16 }}
+              {{- else }}
+              value: {{ tpl ($value | toYaml) $ | quote }}
+              {{- end }}
+              {{- else }}
+              value: {{ tpl $value $ | quote }}
+              {{- end }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.db.name }}
+  labels:
+    {{- include "wraft.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.db.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.db.name }}
+    spec:
+      containers:
+        - name: {{ .Values.db.name }}
+          image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag }}"
+          imagePullPolicy: {{ .Values.db.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.db.service.targetPort }}
+          env:
+            {{- range $key, $value := .Values.db.env }}
+            - name: {{ $key }}
+              {{- if kindIs "map" $value }}
+              {{- if hasKey $value "valueFrom" }}
+              valueFrom:
+                {{- $value.valueFrom | toYaml | nindent 16 }}
+              {{- else }}
+              {{- toYaml $value | nindent 14 }}
+              {{- end }}
+              {{- else }}
+              value: {{ $value | quote }}
+              {{- end }}
+            {{- end }}
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.db.name }}-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.minio.name }}
+  labels:
+    {{- include "wraft.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.minio.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.minio.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.minio.name }}
+    spec:
+      containers:
+        - name: {{ .Values.minio.name }}
+          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
+          imagePullPolicy: {{ .Values.minio.image.pullPolicy }}
+          {{- if .Values.minio.command }}
+          command: {{ toYaml .Values.minio.command | nindent 12 }}
+          {{- end }}
+          ports:
+            {{- range .Values.minio.service.ports }}
+            - containerPort: {{ .targetPort }}
+              name: {{ .name }}
+            {{- end }}
+          env:
+            {{- range $key, $value := .Values.minio.env }}
+            - name: {{ $key }}
+              {{- if kindIs "map" $value }}
+              {{- if hasKey $value "valueFrom" }}
+              valueFrom:
+                {{- $value.valueFrom | toYaml | nindent 16 }}
+              {{- else }}
+              {{- toYaml $value | nindent 14 }}
+              {{- end }}
+              {{- else }}
+              value: {{ $value | quote }}
+              {{- end }}
+            {{- end }}
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.minio.resources | nindent 12 }}
+      volumes:
+        - name: minio-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.minio.name }}-pvc
+---
+{{- if .Values.typesense.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.typesense.name }}
+  labels:
+    {{- include "wraft.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.typesense.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.typesense.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.typesense.name }}
+    spec:
+      containers:
+        - name: {{ .Values.typesense.name }}
+          image: "{{ .Values.typesense.image.repository }}:{{ .Values.typesense.image.tag }}"
+          imagePullPolicy: {{ .Values.typesense.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.typesense.service.port }}
+              name: http
+          env:
+            {{- range $key, $value := .Values.typesense.env }}
+            - name: {{ $key }}
+              {{- if kindIs "map" $value }}
+              {{- if hasKey $value "valueFrom" }}
+              valueFrom:
+                {{- $value.valueFrom | toYaml | nindent 16 }}
+              {{- else }}
+              {{- toYaml $value | nindent 14 }}
+              {{- end }}
+              {{- else }}
+              value: {{ $value | quote }}
+              {{- end }}
+            {{- end }}
+          volumeMounts:
+            - mountPath: /data
+              name: typesense-storage
+      volumes:
+        - name: typesense-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.typesense.name }}-pvc
+            {{- if .Values.typesense.persistence.storageClass }}
+            storageClassName: {{ .Values.typesense.persistence.storageClass }}
+            {{- end }}
+--- 
+{{- end }}
