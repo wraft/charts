@@ -254,11 +254,14 @@ This chart is licensed under the terms found in the [LICENSE](LICENSE) file at t
 
 ## 👥 Contributing
 
-Contributions are welcome! Please feel free to:
+Contributions are welcome! We appreciate your interest in improving the Wraft Helm chart.
 
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+- Code of Conduct
+- Development Workflow
+- Coding Standards
+- Pull Request Process
+- Documentation Requirements
 
 For bug reports or feature requests, please open an issue.
 
