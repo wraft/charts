@@ -6,8 +6,8 @@ global:
   domain: ''
   storageClass: '' # Default storage class for persistent volumes.
 
-frontend:
-  name: wraft-frontend
+web:
+  name: wraft-web
   image:
     repository: quay.io/wraft/wraft-frontend
     tag: latest
@@ -25,8 +25,8 @@ frontend:
       cpu: 200m
       memory: 256Mi
 
-backend:
-  name: wraft-backend
+api:
+  name: wraft-api
   image:
     repository: aurut/wraft-docs-api-v1
     tag: v0.18.3
@@ -36,29 +36,6 @@ backend:
     type: ClusterIP
     port: 4000
     targetPort: 4000
-  env:
-    MIX_ENV: 'prod'
-    SECRET_KEY_BASE:
-      valueFrom:
-        secretKeyRef:
-          name: wraft-secrets
-          key: SECRET_KEY_BASE # Add secret your key.
-    GUARDIAN_KEY:
-      valueFrom:
-        secretKeyRef:
-          name: wraft-secrets
-          key: GUARDIAN_KEY # Add secret your key.
-    DATABASE_URL: 'postgres://{{ .Values.db.env.POSTGRES_USER }}:{{ .Values.db.env.POSTGRES_PASSWORD }}@{{ .Values.db.name }}:{{ .Values.db.service.port }}/{{ .Values.db.env.POSTGRES_DB }}?ssl=false'
-    MINIO_URL: 'http://minio.local:30080' # set ingess url for local deployment
-    MINIO_HOST: 'minio.local'
-    MINIO_PORT: '30080'
-    MINIO_BUCKET: 'wraft'
-    MINIO_ROOT_USER: '{{ .Values.minio.env.MINIO_ROOT_USER }}'
-    MINIO_ROOT_PASSWORD: '{{ .Values.minio.env.MINIO_ROOT_PASSWORD }}'
-    SENTRY_DSN: 'https://public_key@app.getsentry.com/1'
-    XELATEX_PATH: 'xelatex'
-    TYPESENSE_API_KEY: '{{ .Values.typesense.env.TYPESENSE_API_KEY }}'
-    TYPESENSE_HOST: '{{ .Values.typesense.name }}'
   resources:
     limits:
       cpu: 1000m

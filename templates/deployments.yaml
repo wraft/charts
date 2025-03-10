@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.frontend.name }}
+  name: {{ .Values.web.name }}
   labels:
     {{- include "wraft.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.frontend.replicaCount }}
+  replicas: {{ .Values.web.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.frontend.name }}
+      app: {{ .Values.web.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.frontend.name }}
+        app: {{ .Values.web.name }}
     spec:
       containers:
-        - name: {{ .Values.frontend.name }}
-          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
-          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+        - name: {{ .Values.web.name }}
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.frontend.service.targetPort }}
+            - containerPort: {{ .Values.web.service.targetPort }}
           env:
-            {{- range $key, $value := .Values.frontend.env }}
+            {{- range $key, $value := .Values.web.env }}
             - name: {{ $key }}
               {{- if kindIs "map" $value }}
               {{- if hasKey $value "valueFrom" }}
@@ -35,46 +35,67 @@ spec:
               {{- end }}
             {{- end }}
           resources:
-            {{- toYaml .Values.frontend.resources | nindent 12 }}
+            {{- toYaml .Values.web.resources | nindent 12 }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.backend.name }}
+  name: {{ .Values.api.name }}
   labels:
     {{- include "wraft.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.backend.replicaCount }}
+  replicas: {{ .Values.api.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.backend.name }}
+      app: {{ .Values.api.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.backend.name }}
+        app: {{ .Values.api.name }}
     spec:
       containers:
-        - name: {{ .Values.backend.name }}
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        - name: {{ .Values.api.name }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.backend.service.targetPort }}
+            - containerPort: {{ .Values.api.service.targetPort }}
           env:
-            {{- range $key, $value := .Values.backend.env }}
-            - name: {{ $key }}
-              {{- if kindIs "map" $value }}
-              {{- if hasKey $value "valueFrom" }}
+            - name: MIX_ENV
+              value: 'prod'
+            - name: SECRET_KEY_BASE
               valueFrom:
-                {{- $value.valueFrom | toYaml | nindent 16 }}
-              {{- else }}
-              value: {{ tpl ($value | toYaml) $ | quote }}
-              {{- end }}
-              {{- else }}
-              value: {{ tpl $value $ | quote }}
-              {{- end }}
-            {{- end }}
+                secretKeyRef:
+                  name: wraft-secrets
+                  key: SECRET_KEY_BASE
+            - name: GUARDIAN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wraft-secrets
+                  key: GUARDIAN_KEY
+            - name: DATABASE_URL
+              value: 'postgres://{{ .Values.db.env.POSTGRES_USER }}:{{ .Values.db.env.POSTGRES_PASSWORD }}@{{ .Values.db.name }}:{{ .Values.db.service.port }}/{{ .Values.db.env.POSTGRES_DB }}?ssl=false'
+            - name: MINIO_URL
+              value: 'http://minio.local:30080'
+            - name: MINIO_HOST
+              value: 'minio.local'
+            - name: MINIO_PORT
+              value: '30080'
+            - name: MINIO_BUCKET
+              value: 'wraft'
+            - name: MINIO_ROOT_USER
+              value: '{{ .Values.minio.env.MINIO_ROOT_USER }}'
+            - name: MINIO_ROOT_PASSWORD
+              value: '{{ .Values.minio.env.MINIO_ROOT_PASSWORD }}'
+            - name: SENTRY_DSN
+              value: 'https://public_key@app.getsentry.com/1'
+            - name: XELATEX_PATH
+              value: 'xelatex'
+            - name: TYPESENSE_API_KEY
+              value: '{{ .Values.typesense.env.TYPESENSE_API_KEY }}'
+            - name: TYPESENSE_HOST
+              value: '{{ .Values.typesense.name }}'
           resources:
-            {{- toYaml .Values.backend.resources | nindent 12 }}
+            {{- toYaml .Values.api.resources | nindent 12 }}
 ---
 apiVersion: apps/v1
 kind: Deployment
