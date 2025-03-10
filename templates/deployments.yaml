@@ -1,4 +1,5 @@
-apiVersion: apps/v1
+{{- $apiVersion := include "wraft.deployment.apiVersion" . -}}
+apiVersion: {{ $apiVersion }}
 kind: Deployment
 metadata:
   name: {{ .Values.frontend.name }}
@@ -9,17 +10,58 @@ spec:
   selector:
     matchLabels:
       app: {{ .Values.frontend.name }}
+  {{- if .Values.frontend.strategy }}
+  strategy: {{- toYaml .Values.frontend.strategy | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       labels:
         app: {{ .Values.frontend.name }}
+        {{- include "wraft.labels" . | nindent 8 }}
+      {{- if or .Values.frontend.podAnnotations .Values.global.podAnnotations }}
+      annotations:
+        {{- if .Values.global.podAnnotations }}
+        {{- toYaml .Values.global.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.frontend.podAnnotations }}
+        {{- toYaml .Values.frontend.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
     spec:
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- if or .Values.frontend.podSecurityContext.enabled .Values.global.podSecurityContext.enabled }}
+      securityContext:
+        {{- if .Values.frontend.podSecurityContext.enabled }}
+        {{- omit .Values.frontend.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- else }}
+        {{- omit .Values.global.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.frontend.initContainers }}
+      initContainers:
+        {{- toYaml .Values.frontend.initContainers | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.frontend.name }}
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          {{- if or .Values.frontend.containerSecurityContext.enabled .Values.global.containerSecurityContext.enabled }}
+          securityContext:
+            {{- if .Values.frontend.containerSecurityContext.enabled }}
+            {{- omit .Values.frontend.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- else }}
+            {{- omit .Values.global.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- end }}
+          {{- end }}
           ports:
-            - containerPort: {{ .Values.frontend.service.targetPort }}
+            - name: http
+              containerPort: {{ .Values.frontend.service.targetPort }}
+              protocol: TCP
           env:
             {{- range $key, $value := .Values.frontend.env }}
             - name: {{ $key }}
@@ -34,10 +76,58 @@ spec:
               value: {{ $value | quote }}
               {{- end }}
             {{- end }}
+          {{- if .Values.frontend.envFrom }}
+          envFrom:
+            {{- toYaml .Values.frontend.envFrom | nindent 12 }}
+          {{- end }}
+          {{- if .Values.frontend.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.frontend.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.frontend.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.frontend.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.frontend.startupProbe.enabled }}
+          startupProbe:
+            {{- omit .Values.frontend.startupProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- if .Values.frontend.volumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.frontend.volumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.frontend.sidecars }}
+      {{- toYaml .Values.frontend.sidecars | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.frontend.nodeSelector | nindent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.global.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.tolerations }}
+      tolerations:
+        {{- toYaml .Values.frontend.tolerations | nindent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.affinity }}
+      affinity:
+        {{- toYaml .Values.frontend.affinity | nindent 8 }}
+      {{- else if .Values.global.affinity }}
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.volumes }}
+      volumes:
+        {{- toYaml .Values.frontend.volumes | nindent 8 }}
+      {{- end }}
 ---
-apiVersion: apps/v1
+apiVersion: {{ $apiVersion }}
 kind: Deployment
 metadata:
   name: {{ .Values.backend.name }}
@@ -48,35 +138,117 @@ spec:
   selector:
     matchLabels:
       app: {{ .Values.backend.name }}
+  {{- if .Values.backend.strategy }}
+  strategy: {{- toYaml .Values.backend.strategy | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       labels:
         app: {{ .Values.backend.name }}
+        {{- include "wraft.labels" . | nindent 8 }}
+      {{- if or .Values.backend.podAnnotations .Values.global.podAnnotations }}
+      annotations:
+        {{- if .Values.global.podAnnotations }}
+        {{- toYaml .Values.global.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.backend.podAnnotations }}
+        {{- toYaml .Values.backend.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
     spec:
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- if or .Values.backend.podSecurityContext.enabled .Values.global.podSecurityContext.enabled }}
+      securityContext:
+        {{- if .Values.backend.podSecurityContext.enabled }}
+        {{- omit .Values.backend.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- else }}
+        {{- omit .Values.global.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.backend.initContainers }}
+      initContainers:
+        {{- toYaml .Values.backend.initContainers | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.backend.name }}
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          {{- if or .Values.backend.containerSecurityContext.enabled .Values.global.containerSecurityContext.enabled }}
+          securityContext:
+            {{- if .Values.backend.containerSecurityContext.enabled }}
+            {{- omit .Values.backend.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- else }}
+            {{- omit .Values.global.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- end }}
+          {{- end }}
           ports:
-            - containerPort: {{ .Values.backend.service.targetPort }}
+            - name: http
+              containerPort: {{ .Values.backend.service.targetPort }}
+              protocol: TCP
           env:
+            {{- if .Values.backend.env }}
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
-              {{- if kindIs "map" $value }}
-              {{- if hasKey $value "valueFrom" }}
-              valueFrom:
-                {{- $value.valueFrom | toYaml | nindent 16 }}
-              {{- else }}
-              value: {{ tpl ($value | toYaml) $ | quote }}
-              {{- end }}
-              {{- else }}
-              value: {{ tpl $value $ | quote }}
-              {{- end }}
+              value: {{ $value | quote }}
             {{- end }}
+            {{- end }}
+          {{- if .Values.backend.envFrom }}
+          envFrom:
+            {{- toYaml .Values.backend.envFrom | nindent 12 }}
+          {{- end }}
+          {{- if .Values.backend.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.backend.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.backend.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.backend.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.backend.startupProbe.enabled }}
+          startupProbe:
+            {{- omit .Values.backend.startupProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
+          {{- if .Values.backend.volumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.backend.volumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.backend.sidecars }}
+      {{- toYaml .Values.backend.sidecars | nindent 8 }}
+      {{- end }}
+      {{- if .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.backend.nodeSelector | nindent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.global.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml .Values.backend.tolerations | nindent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.backend.affinity }}
+      affinity:
+        {{- toYaml .Values.backend.affinity | nindent 8 }}
+      {{- else if .Values.global.affinity }}
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.backend.volumes }}
+      volumes:
+        {{- toYaml .Values.backend.volumes | nindent 8 }}
+      {{- end }}
 ---
-apiVersion: apps/v1
+apiVersion: {{ $apiVersion }}
 kind: Deployment
 metadata:
   name: {{ .Values.db.name }}
@@ -87,17 +259,58 @@ spec:
   selector:
     matchLabels:
       app: {{ .Values.db.name }}
+  {{- if .Values.db.statefulset.updateStrategy }}
+  strategy: {{- toYaml .Values.db.statefulset.updateStrategy | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       labels:
         app: {{ .Values.db.name }}
+        {{- include "wraft.labels" . | nindent 8 }}
+      {{- if or .Values.db.podAnnotations .Values.global.podAnnotations }}
+      annotations:
+        {{- if .Values.global.podAnnotations }}
+        {{- toYaml .Values.global.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.db.podAnnotations }}
+        {{- toYaml .Values.db.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
     spec:
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- if or .Values.db.podSecurityContext.enabled .Values.global.podSecurityContext.enabled }}
+      securityContext:
+        {{- if .Values.db.podSecurityContext.enabled }}
+        {{- omit .Values.db.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- else }}
+        {{- omit .Values.global.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.db.initContainers }}
+      initContainers:
+        {{- toYaml .Values.db.initContainers | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.db.name }}
           image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag }}"
           imagePullPolicy: {{ .Values.db.image.pullPolicy }}
+          {{- if or .Values.db.containerSecurityContext.enabled .Values.global.containerSecurityContext.enabled }}
+          securityContext:
+            {{- if .Values.db.containerSecurityContext.enabled }}
+            {{- omit .Values.db.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- else }}
+            {{- omit .Values.global.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- end }}
+          {{- end }}
           ports:
-            - containerPort: {{ .Values.db.service.targetPort }}
+            - name: postgres
+              containerPort: {{ .Values.db.service.targetPort }}
+              protocol: TCP
           env:
             {{- range $key, $value := .Values.db.env }}
             - name: {{ $key }}
@@ -109,20 +322,53 @@ spec:
               {{- toYaml $value | nindent 14 }}
               {{- end }}
               {{- else }}
-              value: {{ $value | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-db-secrets
+                  key: {{ $key }}
               {{- end }}
             {{- end }}
+          {{- if .Values.db.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.db.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.db.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.db.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
           volumeMounts:
             - name: db-data
               mountPath: /var/lib/postgresql/data
-          resources:
-            {{- toYaml .Values.db.resources | nindent 12 }}
+              subPath: postgres-data
+      {{- if .Values.db.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.db.nodeSelector | nindent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.global.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.db.tolerations }}
+      tolerations:
+        {{- toYaml .Values.db.tolerations | nindent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.db.affinity }}
+      affinity:
+        {{- toYaml .Values.db.affinity | nindent 8 }}
+      {{- else if .Values.global.affinity }}
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      {{- end }}
       volumes:
         - name: db-data
           persistentVolumeClaim:
             claimName: {{ .Values.db.name }}-pvc
 ---
-apiVersion: apps/v1
+apiVersion: {{ $apiVersion }}
 kind: Deployment
 metadata:
   name: {{ .Values.minio.name }}
@@ -137,11 +383,43 @@ spec:
     metadata:
       labels:
         app: {{ .Values.minio.name }}
+        {{- include "wraft.labels" . | nindent 8 }}
+      {{- if or .Values.minio.podAnnotations .Values.global.podAnnotations }}
+      annotations:
+        {{- if .Values.global.podAnnotations }}
+        {{- toYaml .Values.global.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.minio.podAnnotations }}
+        {{- toYaml .Values.minio.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
     spec:
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- if or .Values.minio.podSecurityContext.enabled .Values.global.podSecurityContext.enabled }}
+      securityContext:
+        {{- if .Values.minio.podSecurityContext.enabled }}
+        {{- omit .Values.minio.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- else }}
+        {{- omit .Values.global.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Values.minio.name }}
           image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
           imagePullPolicy: {{ .Values.minio.image.pullPolicy }}
+          {{- if or .Values.minio.containerSecurityContext.enabled .Values.global.containerSecurityContext.enabled }}
+          securityContext:
+            {{- if .Values.minio.containerSecurityContext.enabled }}
+            {{- omit .Values.minio.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- else }}
+            {{- omit .Values.global.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- end }}
+          {{- end }}
           {{- if .Values.minio.command }}
           command: {{ toYaml .Values.minio.command | nindent 12 }}
           {{- end }}
@@ -149,6 +427,7 @@ spec:
             {{- range .Values.minio.service.ports }}
             - containerPort: {{ .targetPort }}
               name: {{ .name }}
+              protocol: TCP
             {{- end }}
           env:
             {{- range $key, $value := .Values.minio.env }}
@@ -160,22 +439,56 @@ spec:
               {{- else }}
               {{- toYaml $value | nindent 14 }}
               {{- end }}
+              {{- else if or (eq $key "MINIO_ROOT_USER") (eq $key "MINIO_ROOT_PASSWORD") }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-minio-secrets
+                  key: {{ $key }}
               {{- else }}
               value: {{ $value | quote }}
               {{- end }}
             {{- end }}
+          {{- if .Values.minio.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.minio.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.minio.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.minio.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.minio.resources | nindent 12 }}
           volumeMounts:
             - name: minio-data
               mountPath: /data
-          resources:
-            {{- toYaml .Values.minio.resources | nindent 12 }}
+      {{- if .Values.minio.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.minio.nodeSelector | nindent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.global.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.minio.tolerations }}
+      tolerations:
+        {{- toYaml .Values.minio.tolerations | nindent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.minio.affinity }}
+      affinity:
+        {{- toYaml .Values.minio.affinity | nindent 8 }}
+      {{- else if .Values.global.affinity }}
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      {{- end }}
       volumes:
         - name: minio-data
           persistentVolumeClaim:
             claimName: {{ .Values.minio.name }}-pvc
----
 {{- if .Values.typesense.enabled }}
-apiVersion: apps/v1
+---
+apiVersion: {{ $apiVersion }}
 kind: Deployment
 metadata:
   name: {{ .Values.typesense.name }}
@@ -186,18 +499,58 @@ spec:
   selector:
     matchLabels:
       app: {{ .Values.typesense.name }}
+  {{- if .Values.typesense.strategy }}
+  strategy: {{- toYaml .Values.typesense.strategy | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       labels:
         app: {{ .Values.typesense.name }}
+        {{- include "wraft.labels" . | nindent 8 }}
+      {{- if or .Values.typesense.podAnnotations .Values.global.podAnnotations }}
+      annotations:
+        {{- if .Values.global.podAnnotations }}
+        {{- toYaml .Values.global.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.typesense.podAnnotations }}
+        {{- toYaml .Values.typesense.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
     spec:
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- if or .Values.typesense.podSecurityContext.enabled .Values.global.podSecurityContext.enabled }}
+      securityContext:
+        {{- if .Values.typesense.podSecurityContext.enabled }}
+        {{- omit .Values.typesense.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- else }}
+        {{- omit .Values.global.podSecurityContext "enabled" | toYaml | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.typesense.initContainers }}
+      initContainers:
+        {{- toYaml .Values.typesense.initContainers | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.typesense.name }}
           image: "{{ .Values.typesense.image.repository }}:{{ .Values.typesense.image.tag }}"
           imagePullPolicy: {{ .Values.typesense.image.pullPolicy }}
+          {{- if or .Values.typesense.containerSecurityContext.enabled .Values.global.containerSecurityContext.enabled }}
+          securityContext:
+            {{- if .Values.typesense.containerSecurityContext.enabled }}
+            {{- omit .Values.typesense.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- else }}
+            {{- omit .Values.global.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- end }}
+          {{- end }}
           ports:
-            - containerPort: {{ .Values.typesense.service.port }}
-              name: http
+            - name: http
+              containerPort: {{ .Values.typesense.service.port }}
+              protocol: TCP
           env:
             {{- range $key, $value := .Values.typesense.env }}
             - name: {{ $key }}
@@ -208,19 +561,51 @@ spec:
               {{- else }}
               {{- toYaml $value | nindent 14 }}
               {{- end }}
+              {{- else if eq $key "TYPESENSE_API_KEY" }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-typesense-secrets
+                  key: {{ $key }}
               {{- else }}
               value: {{ $value | quote }}
               {{- end }}
             {{- end }}
+          {{- if .Values.typesense.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.typesense.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.typesense.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.typesense.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.typesense.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /data
               name: typesense-storage
+      {{- if .Values.typesense.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.typesense.nodeSelector | nindent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.global.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.typesense.tolerations }}
+      tolerations:
+        {{- toYaml .Values.typesense.tolerations | nindent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.typesense.affinity }}
+      affinity:
+        {{- toYaml .Values.typesense.affinity | nindent 8 }}
+      {{- else if .Values.global.affinity }}
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      {{- end }}
       volumes:
         - name: typesense-storage
           persistentVolumeClaim:
             claimName: {{ .Values.typesense.name }}-pvc
-            {{- if .Values.typesense.persistence.storageClass }}
-            storageClassName: {{ .Values.typesense.persistence.storageClass }}
-            {{- end }}
---- 
 {{- end }}
