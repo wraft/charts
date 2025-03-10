@@ -1,26 +1,54 @@
-apiVersion: networking.k8s.io/v1
+{{- if .Values.ingress.enabled }}
+{{- $apiVersion := include "wraft.ingress.apiVersion" . -}}
+apiVersion: {{ $apiVersion }}
 kind: Ingress
 metadata:
-  name: {{ .Values.minio.name }}-ingress
+  name: {{ .Release.Name }}-ingress
   labels:
     {{- include "wraft.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.className | default "nginx" }}
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
   rules:
-    - host: {{ index (index .Values.ingress.hosts 0) "host" | quote }}
+  {{- range .Values.ingress.hosts }}
+    - host: {{ if $.Values.global.domain }}{{ printf "%s.%s" .host $.Values.global.domain | quote }}{{ else }}{{ .host | quote }}{{ end }}
       http:
         paths:
-          - path: {{ index (index .Values.ingress.hosts 0) "paths" 0 "path" | default "/" | quote }}
-            pathType: Prefix
+        {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ .Values.minio.name }}
+                name: {{ .service.name }}
                 port:
-                  number: {{ index .Values.minio.service.ports 0 "port" }}  # Ensure correct indexing
+                  {{- if kindIs "string" .service.port }}
+                  name: {{ .service.port }}
+                  {{- else }}
+                  number: {{ .service.port }}
+                  {{- end }}
+        {{- end }}
+  {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
-    {{- toYaml .Values.ingress.tls | nindent 4 }}
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- else if .Values.ingress.tlsEnabled }}
+  tls:
+    - hosts:
+        {{- range .Values.ingress.hosts }}
+        - {{ .host | quote }}
+        {{- end }}
+      secretName: {{ .Release.Name }}-tls
   {{- end }}
+{{- end }}
 

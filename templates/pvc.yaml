@@ -30,7 +30,7 @@ spec:
       storage: {{ .Values.minio.persistence.size }}
 {{- end }}
 ---
-{{- if .Values.typesense.persistence.enabled }}
+{{- if and .Values.typesense.enabled .Values.typesense.persistence.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -44,5 +44,4 @@ spec:
   {{- if .Values.typesense.persistence.storageClass }}
   storageClassName: {{ .Values.typesense.persistence.storageClass }}
   {{- end }}
----
 {{- end }}
