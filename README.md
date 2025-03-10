@@ -11,10 +11,12 @@ A Helm chart for deploying the Wraft application on Kubernetes clusters.
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Environment-Specific Configuration](#environment-specific-configuration)
+- [Directory Structure](#directory-structure)
 - [Examples](#examples)
 - [Troubleshooting](#troubleshooting)
 - [Uninstallation](#uninstallation)
 - [Upgrading](#upgrading)
+- [Changelog](#changelog)
 - [License](#license)
 - [Contributing](#contributing)
 - [Password Persistence](#password-persistence)
@@ -240,6 +242,12 @@ helm upgrade my-wraft .
 
 For major version upgrades, please check the release notes for any breaking changes.
 
+## 📝 Changelog
+
+We maintain a changelog to document notable changes to the Wraft Helm chart. The changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+View the full changelog here: [CHANGELOG.md](CHANGELOG.md)
+
 ## 📄 License
 
 This chart is licensed under the terms found in the [LICENSE](LICENSE) file at the root of this repository.
@@ -344,4 +352,36 @@ helm install my-wraft . -f environments/prod/values.yaml \
   --set db.env.POSTGRES_PASSWORD=secure_password \
   --set minio.env.MINIO_ROOT_PASSWORD=secure_minio_password \
   --set typesense.env.TYPESENSE_API_KEY=secure_typesense_key
-``` 
+```
+
+## 📁 Directory Structure
+
+The chart follows a well-organized structure for better maintainability:
+
+```
+wraft-helm/
+├── Chart.yaml              # Chart metadata
+├── values.yaml             # Default configuration values
+├── templates/              # Template files
+│   ├── NOTES.txt           # Installation notes
+│   ├── _helpers.tpl        # Helper functions
+│   ├── components/         # Application components
+│   │   ├── deployment.yaml # Deployments
+│   │   ├── service.yaml    # Services
+│   │   └── ingress.yaml    # Ingress resources
+│   ├── config/             # Configuration resources
+│   │   ├── network-policy.yaml        # Network policies
+│   │   ├── persistent-volume-claim.yaml # PVCs
+│   │   ├── secret.yaml                # Secrets
+│   │   └── serviceaccount.yaml        # Service accounts
+│   └── jobs/               # Job resources
+│       └── create-bucket-job.yaml     # Bucket creation job
+└── environments/           # Environment-specific values
+    ├── dev/                # Development environment
+    └── prod/               # Production environment
+```
+
+This structure ensures:
+- Clear separation of concerns
+- Improved maintainability
+- Easier navigation and understanding of the chart
