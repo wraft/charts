@@ -5,7 +5,7 @@
 # Global configuration parameters shared across all components
 global:
   # Environment type (dev, staging, prod)
-  environment: "dev"
+  environment: 'prod'
   # Domain name for the application
   domain: ''
   # Default storage class for persistent volumes
@@ -23,7 +23,7 @@ global:
   # Image pull secrets for private registries
   imagePullSecrets: []
   # - name: regcred
-  
+
   # Network policies
   networkPolicy:
     enabled: true
@@ -31,33 +31,33 @@ global:
     defaultDenyEgress: false
     # Default ingress rules
     defaultDenyIngress: false
-  
+
   # Pod security context
   podSecurityContext:
-    enabled: true
+    enabled: false
     fsGroup: 1000
     runAsUser: 1000
     runAsNonRoot: true
-  
+
   # Container security context
   containerSecurityContext:
-    enabled: true
+    enabled: false
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     runAsNonRoot: true
     capabilities:
       drop:
         - ALL
-  
+
   # Node selector for all pods
   nodeSelector: {}
-  
+
   # Tolerations for all pods
   tolerations: []
-  
+
   # Affinity rules for all pods
   affinity: {}
-  
+
   # Pod disruption budget
   podDisruptionBudget:
     enabled: false
@@ -66,15 +66,15 @@ global:
 
 # Environment variables for substitution
 env:
-  POSTGRES_USER: "postgres"
-  POSTGRES_PASSWORD: "postgres"
-  POSTGRES_DB: "wraft_data"
-  DB_HOST: "wraft-db.default.svc.cluster.local"
-  DB_PORT: "5432"
-  MINIO_SERVICE_NAME: "wraft-minio"
-  TYPESENSE_SERVICE_NAME: "wraft-typesense"
-  NAMESPACE: "default"
-  DOMAIN: "local"
+  POSTGRES_USER: 'postgres'
+  POSTGRES_PASSWORD: 'postgres'
+  POSTGRES_DB: 'wraft_data'
+  DB_HOST: 'wraft-db.default.svc.cluster.local'
+  DB_PORT: '5432'
+  MINIO_SERVICE_NAME: 'wraft-minio'
+  TYPESENSE_SERVICE_NAME: 'wraft-typesense'
+  NAMESPACE: 'default'
+  DOMAIN: 'local'
 
 # Service account configuration
 serviceAccount:
@@ -84,7 +84,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: ''
 
 # Frontend application configuration
 frontend:
@@ -108,12 +108,12 @@ frontend:
   # Container image configuration
   image:
     repository: quay.io/wraft/wraft-frontend
-    tag: "1.0.0"  # Use specific version tags for production
+    tag: 'latest' # Use specific version tags for production
     pullPolicy: IfNotPresent
     # digest: "sha256:abcdef..."  # For immutable deployments
   # Service configuration
   service:
-    type: ClusterIP  # Use ClusterIP for better security
+    type: ClusterIP # Use ClusterIP for better security
     port: 3000
     targetPort: 3000
   # Resource allocation
@@ -215,9 +215,9 @@ backend:
     MIX_ENV: 'prod'
     # Database connection string - will be templated in the deployment
     DATABASE_URL: 'postgres://postgres:postgres@wraft-db.default.svc.cluster.local:5432/wraft_data?ssl=false'
-    MINIO_URL: 'http://wraft-minio.default.svc.cluster.local:9000'
-    MINIO_HOST: 'wraft-minio.default.svc.cluster.local'
-    MINIO_PORT: '9000'
+    MINIO_URL: 'http://minio-api.local:30080'
+    MINIO_HOST: 'minio-api.local'
+    MINIO_PORT: '30080'
     MINIO_BUCKET: 'wraft'
     SENTRY_DSN: ''
     XELATEX_PATH: 'xelatex'
@@ -240,7 +240,7 @@ backend:
     enabled: true
   # Liveness and readiness probes
   livenessProbe:
-    enabled: true
+    enabled: false
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -250,7 +250,7 @@ backend:
       path: /api/health
       port: http
   readinessProbe:
-    enabled: true
+    enabled: false
     initialDelaySeconds: 5
     periodSeconds: 10
     timeoutSeconds: 5
@@ -279,7 +279,10 @@ backend:
   # Sidecars
   sidecars: []
   # Environment variables from ConfigMaps and Secrets
-  envFrom: []
+  envFrom:
+    - secretRef:
+        name: my-wraft-secrets
+
   # Volume mounts
   volumeMounts: []
   # Volumes
@@ -294,15 +297,15 @@ db:
   # Use external database
   external:
     enabled: false
-    host: ""
+    host: ''
     port: 5432
-    database: ""
-    username: ""
-    existingSecret: ""
-    existingSecretPasswordKey: "postgresql-password"
+    database: ''
+    username: ''
+    existingSecret: ''
+    existingSecretPasswordKey: 'postgresql-password'
   # StatefulSet configuration
   statefulset:
-    updateStrategy: RollingUpdate
+    Strategy: RollingUpdate
     podManagementPolicy: OrderedReady
   # Container image configuration
   image:
@@ -317,21 +320,21 @@ db:
   # Environment variables
   env:
     POSTGRES_USER: 'postgres'
-    POSTGRES_PASSWORD: ''  # Will be auto-generated if empty
+    POSTGRES_PASSWORD: 'postgres' # Will be auto-generated if empty
     POSTGRES_DB: 'wraft_data'
   # Persistence configuration
   persistence:
     enabled: true
-    storageClass: ''  # Uses global.storageClass if not specified
+    storageClass: '' # Uses global.storageClass if not specified
     size: 1Gi
     accessMode: ReadWriteOnce
     annotations: {}
     # Backup and restore
     backup:
       enabled: false
-      schedule: "0 0 * * *"
+      schedule: '0 0 * * *'
       retention: 7
-      storageClass: ""
+      storageClass: ''
       size: 1Gi
   # Resource allocation
   resources:
@@ -346,14 +349,14 @@ db:
   podLabels: {}
   # Security contexts (override globals)
   podSecurityContext:
-    enabled: true
+    enabled: false
     fsGroup: 999
     runAsUser: 999
     runAsNonRoot: true
   containerSecurityContext:
-    enabled: true
+    enabled: false
     allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: false  # Postgres needs to write to its data directory
+    readOnlyRootFilesystem: false # Postgres needs to write to its data directory
   # Liveness and readiness probes
   livenessProbe:
     enabled: true
@@ -409,20 +412,20 @@ minio:
   # Use external MinIO or S3-compatible storage
   external:
     enabled: false
-    endpoint: ""
-    accessKey: ""
-    secretKey: ""
-    existingSecret: ""
-    region: ""
-    bucket: "wraft"
+    endpoint: ''
+    accessKey: ''
+    secretKey: ''
+    existingSecret: ''
+    region: ''
+    bucket: 'wraft'
   # Container image configuration
   image:
     repository: quay.io/minio/minio
-    tag: RELEASE.2023-07-21T21-12-44Z  # Use specific version tags for production
+    tag: RELEASE.2023-07-21T21-12-44Z # Use specific version tags for production
     pullPolicy: IfNotPresent
   # Service configuration
   service:
-    type: ClusterIP  # Use ClusterIP for better security
+    type: ClusterIP # Use ClusterIP for better security
     ports:
       - name: api
         port: 9000
@@ -438,16 +441,15 @@ minio:
     - '--console-address=:9001'
   # Environment variables
   env:
-    MINIO_ROOT_USER: ''  # Will be auto-generated if empty
-    MINIO_ROOT_PASSWORD: ''  # Will be auto-generated if empty
+    MINIO_ROOT_USER: '' # Will be auto-generated if empty
+    MINIO_ROOT_PASSWORD: '' # Will be auto-generated if empty
     # MinIO server configuration
-    MINIO_SERVER_URL: 'http://wraft-minio.default.svc.cluster.local:9000'
-    MINIO_BROWSER_REDIRECT_URL: 'https://minio.local'
+    MINIO_SERVER_URL: 'http://minio-api.local:30080'
     MINIO_PROMETHEUS_AUTH_TYPE: 'public'
   # Persistence configuration
   persistence:
     enabled: true
-    storageClass: ''  # Uses global.storageClass if not specified
+    storageClass: '' # Uses global.storageClass if not specified
     size: 1Gi
     accessMode: ReadWriteOnce
     # For production, consider using multiple PVs
@@ -478,7 +480,7 @@ minio:
   containerSecurityContext:
     enabled: true
     allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: false  # MinIO needs to write to its data directory
+    readOnlyRootFilesystem: false # MinIO needs to write to its data directory
   # Liveness and readiness probes
   livenessProbe:
     enabled: true
@@ -511,7 +513,7 @@ minio:
     # Job configuration
     image:
       repository: minio/mc
-      tag: RELEASE.2023-07-21T21-15-48Z
+      tag: 'latest'
       pullPolicy: IfNotPresent
     resources:
       limits:
@@ -556,14 +558,14 @@ typesense:
   # Environment variables
   env:
     TYPESENSE_DATA_DIR: '/data'
-    TYPESENSE_API_KEY: ''  # Will be auto-generated if empty
+    TYPESENSE_API_KEY: '' # Will be auto-generated if empty
     TYPESENSE_ENABLE_CORS: 'true'
   # Persistence configuration
   persistence:
     enabled: true
     accessMode: ReadWriteOnce
     size: 5Gi
-    storageClass: ''  # Uses global.storageClass if not specified
+    storageClass: '' # Uses global.storageClass if not specified
   # Resource allocation
   resources:
     limits:
@@ -580,7 +582,7 @@ typesense:
     enabled: true
   containerSecurityContext:
     enabled: true
-    readOnlyRootFilesystem: false  # Typesense needs to write to its data directory
+    readOnlyRootFilesystem: false # Typesense needs to write to its data directory
   # Liveness and readiness probes
   livenessProbe:
     enabled: true
@@ -633,8 +635,8 @@ ingress:
       paths:
         - path: '/'
           pathType: Prefix
-          service: 
-            name: 'frontend'
+          service:
+            name: 'wraft-frontend'
             port: 3000
     # Backend API host
     - host: 'api'
@@ -642,23 +644,31 @@ ingress:
         - path: '/'
           pathType: Prefix
           service:
-            name: 'backend'
+            name: 'wraft-backend'
             port: 4000
-    # MinIO console host
-    - host: 'minio'
+      # MinIO console host
+    - host: 'minio-console.local'
       paths:
         - path: '/'
           pathType: Prefix
           service:
-            name: 'minio'
+            name: 'wraft-minio'
             port: 9001
+    # MinIO API host
+    - host: 'minio-api.local'
+      paths:
+        - path: '/'
+          pathType: Prefix
+          service:
+            name: 'wraft-minio'
+            port: 9000
     # Typesense host
     - host: 'search'
       paths:
         - path: '/'
           pathType: Prefix
           service:
-            name: 'typesense'
+            name: 'wraft-typesense-service'
             port: 8108
   # TLS configuration
   tls: []
@@ -666,16 +676,26 @@ ingress:
   #   hosts:
   #     - app.local
   #     - api.local
-  #     - minio.local
+  #     - minio-console.local
+  #     - minio-api.local
   #     - search.local
+
+# NGINX Ingress Controller configuration
+ingress-nginx:
+  controller:
+    service:
+      type: NodePort
+      nodePorts:
+        http: 30080
+        https: 30443
 
 # Security configuration
 security:
   # Create default secrets
   createSecrets: true
   # Secret key generation
-  secretKeyBase: ""  # Auto-generated if empty
-  guardianKey: ""    # Auto-generated if empty
+  secretKeyBase: '' # Auto-generated if empty
+  guardianKey: '' # Auto-generated if empty
   # Pod Security Policies
   psp:
     enabled: false
@@ -685,7 +705,7 @@ security:
   # Secret management
   secretProviderClass:
     enabled: false
-    provider: ""  # aws, azure, gcp, vault
+    provider: '' # aws, azure, gcp, vault
     parameters: {}
 
 # Monitoring and observability
@@ -714,28 +734,28 @@ monitoring:
   # Tracing configuration
   tracing:
     enabled: false
-    provider: ""  # jaeger, zipkin, datadog
+    provider: '' # jaeger, zipkin, datadog
 
 # Backup and disaster recovery
 backup:
   enabled: false
-  schedule: "0 0 * * *"
+  schedule: '0 0 * * *'
   retention: 7
   # Velero configuration
   velero:
     enabled: false
     includeNamespaces:
-      - "{{ .Release.Namespace }}"
+      - '{{ .Release.Namespace }}'
     excludeResources: []
   # Database backup
   database:
     enabled: false
-    type: "pg_dump"
-    destination: "s3://backups/{{ .Release.Namespace }}/db"
+    type: 'pg_dump'
+    destination: 's3://backups/{{ .Release.Namespace }}/db'
   # Object storage backup
   objectStorage:
     enabled: false
-    destination: "s3://backups/{{ .Release.Namespace }}/minio"
+    destination: 's3://backups/{{ .Release.Namespace }}/minio'
 
 # CI/CD integration
 cicd:
@@ -753,7 +773,7 @@ cicd:
   flux:
     enabled: false
     interval: 5m
-    path: "./environments/{{ .Values.global.environment }}"
+    path: './environments/{{ .Values.global.environment }}'
 
 # Path to environment-specific values
-path: "./environments/dev"
+path: './environments/dev'
