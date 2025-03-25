@@ -11,7 +11,8 @@ spec:
     matchLabels:
       app: {{ .Values.frontend.name }}
   {{- if .Values.frontend.strategy }}
-  strategy: {{- toYaml .Values.frontend.strategy | nindent 4 }}
+  strategy: 
+    {{- toYaml .Values.frontend.strategy | nindent 4 }}
   {{- end }}
   template:
     metadata:
@@ -139,7 +140,8 @@ spec:
     matchLabels:
       app: {{ .Values.backend.name }}
   {{- if .Values.backend.strategy }}
-  strategy: {{- toYaml .Values.backend.strategy | nindent 4 }}
+  strategy:
+    {{- toYaml .Values.backend.strategy | nindent 4 }}
   {{- end }}
   template:
     metadata:
@@ -197,6 +199,21 @@ spec:
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
+            - name: TYPESENSE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: my-wraft-typesense-secrets
+                  key: TYPESENSE_API_KEY
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: my-wraft-minio-secrets
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-wraft-minio-secrets
+                  key: MINIO_ROOT_PASSWORD
           {{- if .Values.backend.envFrom }}
           envFrom:
             {{- toYaml .Values.backend.envFrom | nindent 12 }}
@@ -260,7 +277,8 @@ spec:
     matchLabels:
       app: {{ .Values.db.name }}
   {{- if .Values.db.statefulset.updateStrategy }}
-  strategy: {{- toYaml .Values.db.statefulset.updateStrategy | nindent 4 }}
+  strategy: 
+    {{- toYaml .Values.db.statefulset.updateStrategy | nindent 4 }}
   {{- end }}
   template:
     metadata:
@@ -500,7 +518,8 @@ spec:
     matchLabels:
       app: {{ .Values.typesense.name }}
   {{- if .Values.typesense.strategy }}
-  strategy: {{- toYaml .Values.typesense.strategy | nindent 4 }}
+  strategy:
+    {{- toYaml .Values.typesense.strategy | nindent 4 }}
   {{- end }}
   template:
     metadata:
