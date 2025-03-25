@@ -51,4 +51,3 @@ spec:
       secretName: {{ .Release.Name }}-tls
   {{- end }}
 {{- end }}
-
