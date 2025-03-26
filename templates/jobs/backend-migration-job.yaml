@@ -1,0 +1,70 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-backend-migration-{{ .Release.Revision }}
+  labels:
+    {{- include "wraft.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  backoffLimit: {{ .Values.backend.migration.backoffLimit | default 3 }}
+  template:
+    metadata:
+      labels:
+        {{- include "wraft.labels" . | nindent 8 }}
+        app.kubernetes.io/component: backend-migration-job
+    spec:
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.backend.podSecurityContext }}
+      securityContext:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: migrator
+        image: "{{ .Values.backend.migration.image.repository }}:{{ .Values.backend.migration.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.migration.image.pullPolicy | default "IfNotPresent" }}
+        {{- with .Values.backend.containerSecurityContext }}
+        securityContext:
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+        env:
+          {{- range $key, $value := .Values.backend.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+        envFrom:
+          {{- toYaml .Values.backend.envFrom | nindent 10 }}
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Waiting for database to be ready..."
+          for i in {1..30}; do
+            if pg_isready -d "$DATABASE_URL"; then
+              echo "Database is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Database not ready after 30 attempts"
+              exit 1
+            fi
+            echo "Attempt $i failed, retrying in 5 seconds..."
+            sleep 5
+          done
+          
+          echo "Running migrations..."
+          ./migrate.sh || exit 1
+          
+          echo "Running seeds..."
+          ./seeds.sh || exit 1
+          
+          echo "Migration and seeding completed successfully"
+        resources:
+          {{- toYaml .Values.backend.migration.resources | nindent 10 }}
+      restartPolicy: Never
