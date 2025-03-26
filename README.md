@@ -52,6 +52,9 @@ Before installing the chart, ensure you have:
 git clone https://github.com/your-org/wraft-helm.git
 cd wraft-helm
 
+# Build the dependency
+helm dependency build
+
 # Install the chart
 helm install my-wraft .
 ```
