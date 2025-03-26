@@ -202,7 +202,7 @@ backend:
   # Container image configuration
   image:
     repository: aurut/wraft-docs-api-v1
-    tag: v0.18.3
+    tag: v0.18.25
     pullPolicy: IfNotPresent
     # digest: "sha256:abcdef..."  # For immutable deployments
   # Service configuration
@@ -287,6 +287,30 @@ backend:
   volumeMounts: []
   # Volumes
   volumes: []
+
+  # Database migration job configuration
+  migration:
+    enabled: true
+    image:
+      repository: aurut/wraft-docs-api-v1
+      tag: v0.18.25
+      pullPolicy: IfNotPresent
+    backoffLimit: 3
+    activeDeadlineSeconds: 300
+    ttlSecondsAfterFinished: 3600
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    # Additional environment variables specific to migration
+    env: {}
+    # Additional volume mounts for migration scripts if needed
+    volumeMounts: []
+    # Additional volumes for migration if needed
+    volumes: []
 
 # PostgreSQL database configuration
 db:
