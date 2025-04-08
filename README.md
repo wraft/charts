@@ -68,6 +68,17 @@ helm install my-wraft . -f my-values.yaml
 # Or overriding specific values
 helm install my-wraft . --set replicaCount=3 --set service.type=LoadBalancer
 ```
+### Port-Forward Backend Pod
+```bash
+# Run this command to allows the frontend to connect the backend service
+kubectl port-forward pod/{backend-pod-name} 4000:4000
+```
+### update /etc/hosts
+```bash
+# Add your node ip and ingress hostname To ensure Minio functions correctly
+(Nodeip)  minio-api.local
+
+```
 
 ## ⚙️ Configuration
 
