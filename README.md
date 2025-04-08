@@ -1,11 +1,12 @@
 # Wraft Helm Chart
 
-![Wraft Logo](https://via.placeholder.com/150?text=Wraft)
-
-A Helm chart for deploying the Wraft application on Kubernetes clusters.
+<div align="center">
+  <p><strong>A Helm chart for deploying the Wraft application on Kubernetes clusters</strong></p>
+</div>
 
 ## 📋 Contents
 
+- [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -13,50 +14,92 @@ A Helm chart for deploying the Wraft application on Kubernetes clusters.
 - [Environment-Specific Configuration](#environment-specific-configuration)
 - [Directory Structure](#directory-structure)
 - [Examples](#examples)
+- [Password Persistence](#password-persistence)
 - [Troubleshooting](#troubleshooting)
 - [Uninstallation](#uninstallation)
 - [Upgrading](#upgrading)
+- [Contributing](#contributing)
 - [Changelog](#changelog)
 - [License](#license)
-- [Contributing](#contributing)
-- [Password Persistence](#password-persistence)
+
+## 📜 Overview
+
+The Wraft Helm chart provides a complete solution for deploying the Wraft application stack on Kubernetes. It includes configurations for all necessary components:
+
+- **Frontend**: Web interface for user interaction
+- **Backend API**: RESTful services backend
+- **Database**: PostgreSQL for data persistence
+- **Search**: Typesense for fast, typo-tolerant search functionality
+- **Object Storage**: MinIO for scalable, S3-compatible storage
+- **Networking**: Ingress configurations for external access
+
+This chart emphasizes security, scalability, and ease of maintenance across different environments.
 
 ## 🚀 Quick Start
 
+Use our `easy-up.sh` script for a simple deployment:
+
 ```bash
-# Add the repository (if not using local chart)
-# helm repo add wraft-repo https://your-repo-url.com
+./easy-up.sh
+```
 
-# Install with default values
-helm install my-wraft ./wraft
+This will deploy Wraft with default settings to your Kubernetes cluster.
 
-# Verify the installation
-kubectl get pods -l app.kubernetes.io/name=wraft
+### Script Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-n, --namespace` | Kubernetes namespace | `default` |
+| `-r, --release` | Helm release name | `wraft` |
+| `-e, --env` | Environment configuration | `dev` |
+| `-h, --help` | Show help message | - |
+
+### Examples
+
+```bash
+# Deploy with default values
+./easy-up.sh
+
+# Deploy to a specific namespace
+./easy-up.sh --namespace my-namespace
+
+# Deploy with a custom release name
+./easy-up.sh --release my-release-name
+
+# Deploy to a specific environment
+./easy-up.sh --env production
 ```
 
 ## ✅ Prerequisites
-
-Before installing the chart, ensure you have:
 
 - Kubernetes cluster (version 1.16+)
 - Helm 3.0+ installed
 - kubectl configured to communicate with your cluster
 - PV provisioner support in your cluster (if persistence is enabled)
+- Sufficient cluster resources for all components:
+  - At least 2 vCPUs and 4GB RAM recommended
+  - Minimum 20GB storage for persistent volumes
 
 ## 📦 Installation
 
-### Basic Installation
+### Using the easy-up.sh Script
+
+The quickest way to install Wraft is using our easy-up.sh script as mentioned in the [Quick Start](#quick-start) section.
+
+### Manual Installation
+
+If you prefer more control, you can perform a manual installation:
 
 ```bash
-# Clone this repository (if using local chart)
-git clone https://github.com/your-org/wraft-helm.git
+# Clone this repository
+git clone https://github.com/wraft/wraft-helm.git
 cd wraft-helm
 
-# Build the dependency
+# Build the dependencies
 helm dependency build
 
-# Install the chart
-helm install my-wraft .
+# Install the chart with the release name "wraft"
+helm upgrade --install wraft . --values values.yaml --values environments/dev/values.yaml
 ```
 
 ### Installation with Custom Values
@@ -68,23 +111,24 @@ helm install my-wraft . -f my-values.yaml
 # Or overriding specific values
 helm install my-wraft . --set replicaCount=3 --set service.type=LoadBalancer
 ```
-### Port-Forward Backend Pod
-```bash
-# Run this command to allows the frontend to connect the backend service
-kubectl port-forward pod/{backend-pod-name} 4000:4000
-```
-### update /etc/hosts
-```bash
-# Add your node ip and ingress hostname To ensure Minio functions correctly
-(Nodeip)  minio-api.local
 
+### Post-Installation Setup
+
+#### Port-Forward Backend Pod
+```bash
+# Allow the frontend to connect to the backend service
+kubectl port-forward pod/$(kubectl get pods -l app.kubernetes.io/component=backend -o jsonpath="{.items[0].metadata.name}") 4000:4000
+```
+
+#### Update /etc/hosts
+```bash
+# Add your node IP and ingress hostname to ensure MinIO functions correctly
+echo "$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')  minio-api.local" | sudo tee -a /etc/hosts
 ```
 
 ## ⚙️ Configuration
 
 ### Key Parameters
-
-The following table lists the most common parameters you might want to configure:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
@@ -98,22 +142,23 @@ The following table lists the most common parameters you might want to configure
 | `resources.requests` | Resource requests | `{}` |
 | `persistence.enabled` | Enable persistent storage | `false` |
 | `persistence.size` | Size of persistent volume | `10Gi` |
+| `global.domain` | Base domain for all services | `example.com` |
 
 For a complete list of parameters, please refer to the [values.yaml](values.yaml) file.
 
 ### Customizing Values
 
-There are several ways to customize the configuration values:
+There are several ways to customize the configuration:
 
-1. **Modifying the values.yaml file**:
-   Edit the values.yaml file directly before installation:
-   ```bash
-   # Edit the values file
-   nano values.yaml
-   
-   # Install with the modified values
-   helm install my-wraft .
-   ```
+#### 1. Modifying the values.yaml file
+
+```bash
+# Edit the values file
+nano values.yaml
+
+# Install with the modified values
+helm install my-wraft .
+```
 
 2. **Using a custom values file**:
    Create a separate values file with only the values you want to override:
@@ -147,23 +192,7 @@ There are several ways to customize the configuration values:
    helm install my-wraft . --set ingress.hosts[0].host=wraft.example.com
    ```
 
-4. **Combining methods**:
-   You can combine custom value files with command line overrides:
-   ```bash
-   helm install my-wraft . -f custom-values.yaml --set service.port=8080
-   ```
-
-### Value Precedence
-
-When multiple value sources are provided, they are merged with the following precedence (highest to lowest):
-
-1. Command line values (--set, --set-string, --set-file)
-2. Values from value files (-f, --values)
-3. Default values from the chart's values.yaml
-
 ### Checking Effective Configuration
-
-To see the effective configuration that will be applied:
 
 ```bash
 # Before installation
@@ -171,6 +200,78 @@ helm install my-wraft . --dry-run --debug
 
 # For an existing release
 helm get values my-wraft
+```
+
+## 🌍 Environment-Specific Configuration
+
+This chart supports environment-specific configurations through dedicated value files.
+
+### Environment Value Files
+
+The chart includes pre-configured environment files:
+
+- `environments/dev/values.yaml`: Development environment (lower resource requirements, debugging enabled)
+- `environments/prod/values.yaml`: Production environment (optimized for performance and reliability)
+
+To use these configurations:
+
+```bash
+# For development environment
+helm install my-wraft . -f environments/dev/values.yaml
+
+# For production environment
+helm install my-wraft . -f environments/prod/values.yaml
+```
+
+### Domain Configuration
+
+The chart uses the `global.domain` value to configure hostnames:
+
+| Service | Hostname Pattern |
+|---------|------------------|
+| Frontend | `app.{global.domain}` |
+| Backend API | `api.{global.domain}` |
+| MinIO Console | `minio.{global.domain}` |
+| Typesense | `search.{global.domain}` |
+
+### Sensitive Information
+
+For sensitive data like passwords and API keys:
+
+1. **Never commit secrets to version control**
+2. **Use Kubernetes Secrets or external secret management solutions**
+3. **Pass sensitive values via the command line**:
+
+```bash
+helm install my-wraft . -f environments/prod/values.yaml \
+  --set db.env.POSTGRES_PASSWORD=secure_password \
+  --set minio.env.MINIO_ROOT_PASSWORD=secure_minio_password \
+  --set typesense.env.TYPESENSE_API_KEY=secure_typesense_key
+```
+
+## 📁 Directory Structure
+
+```
+wraft-helm/
+├── Chart.yaml              # Chart metadata
+├── values.yaml             # Default configuration values
+├── templates/              # Template files
+│   ├── NOTES.txt           # Installation notes
+│   ├── _helpers.tpl        # Helper functions
+│   ├── components/         # Application components
+│   │   ├── deployment.yaml # Deployments
+│   │   ├── service.yaml    # Services
+│   │   └── ingress.yaml    # Ingress resources
+│   ├── config/             # Configuration resources
+│   │   ├── network-policy.yaml        # Network policies
+│   │   ├── persistent-volume-claim.yaml # PVCs
+│   │   ├── secret.yaml                # Secrets
+│   │   └── serviceaccount.yaml        # Service accounts
+│   └── jobs/               # Job resources
+│       └── create-bucket-job.yaml     # Bucket creation job
+└── environments/           # Environment-specific values
+    ├── dev/                # Development environment
+    └── prod/               # Production environment
 ```
 
 ## 📝 Examples
@@ -208,90 +309,19 @@ Apply with:
 helm install public-wraft . -f public-values.yaml
 ```
 
-## 🔍 Troubleshooting
+## 🔐 Password Persistence
 
-### Common Issues
+This chart maintains consistent passwords across deployments through:
 
-1. **Pods not starting**:
-   ```bash
-   kubectl describe pod -l app.kubernetes.io/name=wraft
-   ```
+1. **Deterministic Secret Generation**: Passwords are generated based on the release name, ensuring consistency.
 
-2. **Service not accessible**:
-   ```bash
-   kubectl get svc -l app.kubernetes.io/name=wraft
-   ```
+2. **Secret Retention Policy**: Secrets are annotated with `helm.sh/resource-policy: keep` to prevent deletion during upgrades.
 
-3. **Resource constraints**:
-   Check if your cluster has enough resources:
-   ```bash
-   kubectl describe nodes | grep -A 5 "Allocated resources"
-   ```
-
-## 🗑️ Uninstalling the Chart
-
-To remove the Wraft deployment:
-
-```bash
-# List all releases
-helm list
-
-# Uninstall the release
-helm uninstall my-wraft
-```
-
-This will remove all Kubernetes resources associated with the chart.
-
-## 🔄 Upgrading
-
-To upgrade your Wraft deployment:
-
-```bash
-# Update the repository (if not using local chart)
-# helm repo update
-
-# Upgrade the deployment
-helm upgrade my-wraft .
-```
-
-For major version upgrades, please check the release notes for any breaking changes.
-
-## 📝 Changelog
-
-We maintain a changelog to document notable changes to the Wraft Helm chart. The changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-View the full changelog here: [CHANGELOG.md](CHANGELOG.md)
-
-## 📄 License
-
-This chart is licensed under the terms found in the [LICENSE](LICENSE) file at the root of this repository.
-
-## 👥 Contributing
-
-Contributions are welcome! We appreciate your interest in improving the Wraft Helm chart.
-
-Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on:
-- Code of Conduct
-- Development Workflow
-- Coding Standards
-- Pull Request Process
-- Documentation Requirements
-
-For bug reports or feature requests, please open an issue.
-
-## Password Persistence
-
-This Helm chart is configured to maintain consistent passwords and secrets across pod restarts and redeployments. This is achieved through:
-
-1. **Deterministic Secret Generation**: Instead of using random generation for passwords, the chart uses a deterministic approach based on the Release name. This ensures that the same passwords are generated each time the chart is deployed with the same release name.
-
-2. **Secret Retention Policy**: Secrets are annotated with `helm.sh/resource-policy: keep` to prevent Helm from deleting them during upgrades or redeployments.
-
-3. **Versioned Jobs**: Jobs like the MinIO bucket creation job are versioned with the Release revision to ensure they run only when explicitly upgraded, not on pod restarts.
+3. **Versioned Jobs**: Jobs are versioned with the release revision to run only when explicitly upgraded.
 
 ### Setting Explicit Passwords
 
-For production environments, it's recommended to set explicit passwords in your values file or through Helm's `--set` flag:
+For production, set explicit passwords in your values file:
 
 ```yaml
 db:
@@ -312,93 +342,101 @@ security:
   guardianKey: "your-secure-guardian-key"
 ```
 
-When explicit passwords are provided, they will be used instead of the generated ones and will persist across all deployments.
+## 🔍 Troubleshooting
 
-## Environment-Specific Configuration
+### Common Issues and Solutions
 
-This Helm chart supports environment-specific configurations through the use of environment-specific value files.
+#### 1. Pods not starting
 
-### Environment Value Files
+**Symptoms**: Pods remain in `Pending` or `CrashLoopBackOff` state.
 
-The chart includes pre-configured environment value files for different deployment scenarios:
+**Diagnosis**:
+```bash
+kubectl describe pod -l app.kubernetes.io/name=wraft
+```
 
-- `environments/dev/values.yaml`: Development environment configuration
-- `environments/prod/values.yaml`: Production environment configuration
+**Common causes and solutions**:
+- **Resource constraints**: Ensure your cluster has sufficient resources
+- **Configuration errors**: Check for typos in values or missing required fields
+- **Image pull errors**: Verify image repository access and credentials
 
-To use these environment-specific configurations:
+#### 2. Service not accessible
+
+**Symptoms**: Unable to connect to services.
+
+**Diagnosis**:
+```bash
+kubectl get svc -l app.kubernetes.io/name=wraft
+kubectl get ingress
+```
+
+**Common causes and solutions**:
+- **Service type**: Ensure service type matches your environment (ClusterIP, NodePort, LoadBalancer)
+- **Ingress configuration**: Verify ingress controller is running and rules are correct
+- **Network policies**: Check if network policies are blocking traffic
+
+#### 3. Persistent volume issues
+
+**Symptoms**: Storage-related errors.
+
+**Diagnosis**:
+```bash
+kubectl get pv,pvc
+kubectl describe pvc
+```
+
+**Solutions**:
+- Ensure your cluster has a PV provisioner
+- Check storage class availability and configuration
+- Verify volume size and access modes
+
+## 🗑️ Uninstallation
+
+To remove the Wraft deployment:
 
 ```bash
-# For development environment
-helm install my-wraft . -f environments/dev/values.yaml
+# List all releases
+helm list
 
-# For production environment
-helm install my-wraft . -f environments/prod/values.yaml
+# Uninstall the release
+helm uninstall my-wraft
 ```
 
-### Domain Configuration
+This will remove all Kubernetes resources associated with the chart. Note that PVCs and PVs might not be automatically deleted depending on your reclaim policy.
 
-The chart uses the `global.domain` value to configure hostnames for ingress resources. For example, if `global.domain` is set to `example.com`, the following hostnames will be configured:
+## 🔄 Upgrading
 
-- Frontend: `app.example.com`
-- Backend API: `api.example.com`
-- MinIO Console: `minio.example.com`
-- Typesense: `search.example.com`
-
-### Database Configuration
-
-Database credentials and connection details can be configured in the environment-specific values files:
-
-```yaml
-db:
-  env:
-    POSTGRES_USER: "wraft_prod"
-    POSTGRES_PASSWORD: "secure_password"
-    POSTGRES_DB: "wraft_production"
-```
-
-### Sensitive Information
-
-For sensitive information like passwords and API keys, it's recommended to:
-
-1. **Never commit secrets to version control**
-2. **Use Kubernetes Secrets or external secret management solutions**
-3. **Pass sensitive values via the command line**:
+To upgrade your Wraft deployment:
 
 ```bash
-helm install my-wraft . -f environments/prod/values.yaml \
-  --set db.env.POSTGRES_PASSWORD=secure_password \
-  --set minio.env.MINIO_ROOT_PASSWORD=secure_minio_password \
-  --set typesense.env.TYPESENSE_API_KEY=secure_typesense_key
+# Pull latest changes (if using git)
+git pull
+
+# Update dependencies
+helm dependency build
+
+# Upgrade the deployment
+helm upgrade my-wraft .
 ```
 
-## 📁 Directory Structure
+For major version upgrades, please check the [Changelog](#changelog) for any breaking changes.
 
-The chart follows a well-organized structure for better maintainability:
+## 👥 Contributing
 
-```
-wraft-helm/
-├── Chart.yaml              # Chart metadata
-├── values.yaml             # Default configuration values
-├── templates/              # Template files
-│   ├── NOTES.txt           # Installation notes
-│   ├── _helpers.tpl        # Helper functions
-│   ├── components/         # Application components
-│   │   ├── deployment.yaml # Deployments
-│   │   ├── service.yaml    # Services
-│   │   └── ingress.yaml    # Ingress resources
-│   ├── config/             # Configuration resources
-│   │   ├── network-policy.yaml        # Network policies
-│   │   ├── persistent-volume-claim.yaml # PVCs
-│   │   ├── secret.yaml                # Secrets
-│   │   └── serviceaccount.yaml        # Service accounts
-│   └── jobs/               # Job resources
-│       └── create-bucket-job.yaml     # Bucket creation job
-└── environments/           # Environment-specific values
-    ├── dev/                # Development environment
-    └── prod/               # Production environment
-```
+We welcome contributions to improve the Wraft Helm chart! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on:
 
-This structure ensures:
-- Clear separation of concerns
-- Improved maintainability
-- Easier navigation and understanding of the chart
+- Code of Conduct
+- Development Workflow
+- Coding Standards
+- Pull Request Process
+- Documentation Requirements
+
+We also maintain [Conventions](CONVENTIONS.md) for consistent chart development.
+
+## 📝 Changelog
+
+We maintain a changelog to document notable changes to the Wraft Helm chart. View the full changelog here: [CHANGELOG.md](CHANGELOG.md)
+
+## 📄 License
+
+This chart is licensed under the terms found in the [LICENSE](LICENSE) file at the root of this repository.
