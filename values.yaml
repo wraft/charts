@@ -5,7 +5,7 @@
 # Global configuration parameters shared across all components
 global:
   # Environment type (dev, staging, prod)
-  environment: 'prod'
+  environment: 'dev'
   # Domain name for the application
   domain: ''
   # Default storage class for persistent volumes
