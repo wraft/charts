@@ -7,7 +7,7 @@ global:
   # Environment type (dev, staging, prod)
   environment: 'dev'
   # Domain name for the application
-  domain: ''
+  domain: 'local'
   # Default storage class for persistent volumes
   storageClass: ''
   # Common image pull policy for all services
@@ -69,7 +69,7 @@ env:
   POSTGRES_USER: 'postgres'
   POSTGRES_PASSWORD: 'postgres'
   POSTGRES_DB: 'wraft_data'
-  DB_HOST: 'wraft-db.default.svc.cluster.local'
+  DB_HOST: 'wraft-db'
   DB_PORT: '5432'
   MINIO_SERVICE_NAME: 'wraft-minio'
   TYPESENSE_SERVICE_NAME: 'wraft-typesense'
@@ -202,7 +202,7 @@ backend:
   # Container image configuration
   image:
     repository: aurut/wraft-docs-api-v1
-    tag: v0.18.25
+    tag: v0.18.29
     pullPolicy: IfNotPresent
     # digest: "sha256:abcdef..."  # For immutable deployments
   # Service configuration
@@ -214,14 +214,14 @@ backend:
   env:
     MIX_ENV: 'prod'
     # Database connection string - will be templated in the deployment
-    DATABASE_URL: 'postgres://postgres:postgres@wraft-db.default.svc.cluster.local:5432/wraft_data?ssl=false'
+    DATABASE_URL: 'postgres://postgres:postgres@wraft-db:5432/wraft_data?ssl=false'
     MINIO_URL: 'http://minio-api.local:30080'
     MINIO_HOST: 'minio-api.local'
     MINIO_PORT: '30080'
     MINIO_BUCKET: 'wraft'
     SENTRY_DSN: ''
     XELATEX_PATH: 'xelatex'
-    TYPESENSE_HOST: 'wraft-typesense.default.svc.cluster.local'
+    TYPESENSE_HOST: 'wraft-typesense'
   # Resource allocation
   resources:
     limits:
@@ -281,7 +281,7 @@ backend:
   # Environment variables from ConfigMaps and Secrets
   envFrom:
     - secretRef:
-        name: my-wraft-secrets
+        name: wraft-secrets
 
   # Volume mounts
   volumeMounts: []
@@ -671,7 +671,7 @@ ingress:
             name: 'wraft-backend'
             port: 4000
       # MinIO console host
-    - host: 'minio-console.local'
+    - host: 'minio-console'
       paths:
         - path: '/'
           pathType: Prefix
@@ -679,7 +679,7 @@ ingress:
             name: 'wraft-minio'
             port: 9001
     # MinIO API host
-    - host: 'minio-api.local'
+    - host: 'minio-api'
       paths:
         - path: '/'
           pathType: Prefix
