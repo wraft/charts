@@ -60,6 +60,10 @@ if [ ! -f "$ENV_VALUES" ]; then
   exit 1
 fi
 
+# Build Helm dependencies if needed
+echo "🔍 Checking chart dependencies..."
+helm dependency build > /dev/null
+
 # Deploy the Helm chart
 echo "📦 Installing/upgrading Helm chart..."
 helm upgrade --install $RELEASE_NAME . \
@@ -68,5 +72,8 @@ helm upgrade --install $RELEASE_NAME . \
   --values values.yaml \
   --values $ENV_VALUES
 
+# Add your node IP and ingress hostname to ensure MinIO functions correctly
+echo "$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')  minio-api.local" | sudo tee -a /etc/hosts
+
 echo "✅ Deployment complete! Your application should be up shortly."
-echo "📊 To check status, run: kubectl get pods -n $NAMESPACE" 
+echo "📊 To check status, run: kubectl get pods -n $NAMESPACE"

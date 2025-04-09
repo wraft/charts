@@ -202,17 +202,17 @@ spec:
             - name: TYPESENSE_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: my-wraft-typesense-secrets
+                  name: {{ .Release.Name }}-typesense-secrets
                   key: TYPESENSE_API_KEY
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
-                  name: my-wraft-minio-secrets
+                  name: {{ .Release.Name }}-minio-secrets
                   key: MINIO_ROOT_USER
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: my-wraft-minio-secrets
+                  name: {{ .Release.Name }}-minio-secrets
                   key: MINIO_ROOT_PASSWORD
           {{- if .Values.backend.envFrom }}
           envFrom:
