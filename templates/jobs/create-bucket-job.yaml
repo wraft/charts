@@ -5,10 +5,6 @@ metadata:
   name: {{ .Release.Name }}-create-bucket-{{ .Release.Revision }}
   labels:
     {{- include "wraft.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 spec:
   backoffLimit: {{ .Values.minio.createBucket.backoffLimit | default 3 }}
   {{- if .Values.minio.createBucket.activeDeadlineSeconds }}
@@ -23,6 +19,7 @@ spec:
         {{- include "wraft.labels" . | nindent 8 }}
         app.kubernetes.io/component: create-bucket-job
     spec:
+      restartPolicy: Never
       {{- if .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- range .Values.global.imagePullSecrets }}
@@ -38,62 +35,61 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-      - name: create-bucket
-        image: "{{ .Values.minio.createBucket.image.repository }}:{{ .Values.minio.createBucket.image.tag | default "latest" }}"
-        imagePullPolicy: {{ .Values.minio.createBucket.image.pullPolicy | default "IfNotPresent" }}
-        {{- if or .Values.minio.createBucket.containerSecurityContext.enabled .Values.global.containerSecurityContext.enabled }}
-        securityContext:
-          {{- if .Values.minio.createBucket.containerSecurityContext.enabled }}
-          {{- omit .Values.minio.createBucket.containerSecurityContext "enabled" | toYaml | nindent 10 }}
-          {{- else }}
-          {{- omit .Values.global.containerSecurityContext "enabled" | toYaml | nindent 10 }}
+        - name: create-bucket
+          image: "{{ .Values.minio.createBucket.image.repository }}:{{ .Values.minio.createBucket.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.minio.createBucket.image.pullPolicy | default "IfNotPresent" }}
+          {{- if or .Values.minio.createBucket.containerSecurityContext.enabled .Values.global.containerSecurityContext.enabled }}
+          securityContext:
+            {{- if .Values.minio.createBucket.containerSecurityContext.enabled }}
+            {{- omit .Values.minio.createBucket.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- else }}
+            {{- omit .Values.global.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+            {{- end }}
           {{- end }}
-        {{- end }}
-        env:
-        - name: MINIO_SERVER
-          value: "http://{{ .Values.minio.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ index .Values.minio.service.ports 0 "port" }}"
-        - name: MINIO_BUCKET
-          value: "{{ .Values.minio.createBucket.bucketName | default "wraft" }}"
-        - name: MINIO_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}-minio-secrets
-              key: MINIO_ROOT_USER
-        - name: MINIO_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}-minio-secrets
-              key: MINIO_ROOT_PASSWORD
-        command: ["/bin/sh", "-c"]
-        args:
-        - |
-          # Wait for MinIO to be ready
-          echo "Waiting for MinIO to be ready..."
-          for i in $(seq 1 30); do
-            if mc config host add myminio $MINIO_SERVER $MINIO_USER $MINIO_PASSWORD; then
-              echo "Successfully connected to MinIO"
-              break
-            fi
-            if [ $i -eq 30 ]; then
-              echo "Failed to connect to MinIO after 30 attempts"
-              exit 1
-            fi
-            echo "Attempt $i failed, retrying in 5 seconds..."
-            sleep 5
-          done
-          
-          # Check if bucket already exists
-          if mc ls myminio | grep -q "$MINIO_BUCKET"; then
-            echo "Bucket $MINIO_BUCKET already exists"
-          else
-            echo "Creating bucket $MINIO_BUCKET"
-            mc mb -p myminio/$MINIO_BUCKET
-            mc policy set public myminio/$MINIO_BUCKET
-          fi
-          
-          echo "Bucket setup completed successfully"
-        resources:
-          {{- toYaml .Values.minio.createBucket.resources | nindent 10 }}
-      restartPolicy: Never
+          env:
+            - name: MINIO_SERVER
+              value: "http://{{ .Values.minio.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ index .Values.minio.service.ports 0 "port" }}"
+            - name: MINIO_BUCKET
+              value: "{{ .Values.minio.createBucket.bucketName | default "wraft" }}"
+            - name: MINIO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-minio-secrets
+                  key: MINIO_ROOT_USER
+            - name: MINIO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-minio-secrets
+                  key: MINIO_ROOT_PASSWORD
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "⏳ Waiting for MinIO to be ready..."
+              for i in $(seq 1 30); do
+                if mc alias set myminio $MINIO_SERVER $MINIO_USER $MINIO_PASSWORD; then
+                  echo "✅ Connected to MinIO"
+                  break
+                fi
+                if [ $i -eq 30 ]; then
+                  echo "❌ Failed to connect to MinIO after 30 attempts"
+                  exit 1
+                fi
+                echo "Retrying MinIO connection ($i)..."
+                sleep 5
+              done
+
+              echo "📦 Checking if bucket $MINIO_BUCKET exists..."
+              if mc ls myminio | grep -q "$MINIO_BUCKET"; then
+                echo "✅ Bucket $MINIO_BUCKET already exists"
+              else
+                echo "🚀 Creating bucket $MINIO_BUCKET..."
+                mc mb -p myminio/$MINIO_BUCKET
+                mc policy set public myminio/$MINIO_BUCKET
+              fi
+
+              echo "🎉 Bucket setup completed successfully"
+          resources:
+            {{- toYaml .Values.minio.createBucket.resources | nindent 12 }}
 {{- end }}
+
 
