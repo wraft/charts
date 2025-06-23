@@ -201,8 +201,8 @@ backend:
       maxUnavailable: 0
   # Container image configuration
   image:
-    repository: aurut/wraft-docs-api-v1
-    tag: v0.18.29
+    repository: quay.io/wraft/wraft
+    tag: v0.1.2
     pullPolicy: IfNotPresent
     # digest: "sha256:abcdef..."  # For immutable deployments
   # Service configuration
@@ -219,7 +219,7 @@ backend:
     MINIO_HOST: 'minio-api.local'
     MINIO_PORT: '30080'
     MINIO_BUCKET: 'wraft'
-    SENTRY_DSN: ''
+    SENTRY_DSN: 'https://public_key@app.getsentry.com/1'
     XELATEX_PATH: 'xelatex'
     TYPESENSE_HOST: 'wraft-typesense'
   # Resource allocation
@@ -292,8 +292,8 @@ backend:
   migration:
     enabled: true
     image:
-      repository: aurut/wraft-docs-api-v1
-      tag: v0.18.25
+      repository: quay.io/wraft/wraft
+      tag: v0.1.2
       pullPolicy: IfNotPresent
     backoffLimit: 3
     activeDeadlineSeconds: 300
