@@ -117,7 +117,7 @@ helm install my-wraft . --set replicaCount=3 --set service.type=LoadBalancer
 #### Port-Forward Backend Pod
 ```bash
 # Allow the frontend to connect to the backend service
-kubectl port-forward pod/$(kubectl get pods -l app.kubernetes.io/component=backend -o jsonpath="{.items[0].metadata.name}") 4000:4000
+kubectl port-forward pod/$(kubectl get pods -l app=wraft-backend -o jsonpath="{.items[0].metadata.name}") 4000:4000
 ```
 
 #### Update /etc/hosts
