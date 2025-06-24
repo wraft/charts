@@ -13,14 +13,14 @@ entries:
           email: wraftteam@wraft.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-06-24T07:06:50.137716758Z"
+    created: "2025-06-24T07:12:58.210541563Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
       version: 4.0.6
     description: A Helm chart for Wraft application deployment with improved organization
       and maintainability
-    digest: de0a51a8ed917f6c2bdb32c106e37e937392114ca90773e9ad2cf69cdab7785a
+    digest: 74bf348f4f37d9502d9c40d7e4866423c62264c47c85e16eb10509b46e3967eb
     home: https://github.com/wraft/wraft-helm
     keywords:
     - wraft
@@ -36,4 +36,4 @@ entries:
     urls:
     - https://wraft.github.io/wraft/wraft-0.1.2.tgz
     version: 0.1.2
-generated: "2025-06-24T07:06:50.133383373Z"
+generated: "2025-06-24T07:12:58.205983924Z"
