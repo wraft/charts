@@ -45,6 +45,6 @@ echo "📝 Don't forget to:"
 echo "  1. Update the CHANGELOG.md with your changes"
 echo "  2. Commit the changes"
 echo "  3. Create a git tag for the new version"
-echo "     git tag -a v$NEW_VERSION -m \"Release v$NEW_VERSION\""
+echo "     git tag -a wraft-$NEW_VERSION -m \"Release wraft-$NEW_VERSION\""
 
 exit 0 
