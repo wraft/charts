@@ -20,6 +20,11 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v3
 
+      # Update chart dependencies
+      - name: Helm dependency update
+        run: |
+          helm dependency update charts/wraft
+
       # Package the Helm chart
       - name: Package Helm chart
         run: |
