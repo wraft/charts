@@ -31,11 +31,14 @@ jobs:
           # Create a temporary directory for existing charts
           mkdir -p .cr-existing-packages
           
+          # Store the current commit SHA to return to it later
+          ORIGINAL_SHA=$(git rev-parse HEAD)
+          
           # Try to fetch existing charts from gh-pages branch
           if git ls-remote --exit-code --heads origin gh-pages; then
             echo "gh-pages branch exists, fetching existing charts..."
-            git fetch origin gh-pages:gh-pages || true
-            git checkout gh-pages || true
+            git fetch origin gh-pages || true
+            git checkout FETCH_HEAD || true
             
             # Copy existing .tgz files if they exist
             if ls *.tgz 1> /dev/null 2>&1; then
@@ -47,8 +50,8 @@ jobs:
               cp index.yaml .cr-existing-packages/ || true
             fi
             
-            # Switch back to main branch
-            git checkout main
+            # Switch back to original commit
+            git checkout $ORIGINAL_SHA
           else
             echo "gh-pages branch doesn't exist yet, this will be the first release"
           fi
@@ -71,6 +74,9 @@ jobs:
             echo "Merging with existing index.yaml..."
             helm repo index .cr-release-packages --url https://wraft.github.io/charts --merge .cr-existing-packages/index.yaml
           fi
+          
+          # Add .nojekyll file to disable Jekyll processing
+          touch .cr-release-packages/.nojekyll
 
       - name: Push to GitHub Pages
         if: github.ref == 'refs/heads/main'
