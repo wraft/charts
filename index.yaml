@@ -9,11 +9,46 @@ entries:
         - name: Changelog
           url: https://github.com/wraft/wraft-helm/blob/main/CHANGELOG.md
       artifacthub.io/maintainers: |
+        - name: Salsabeel
+          email: salsabeel@functionary.co
+    apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-06-24T14:30:20.188480924Z"
+    dependencies:
+    - name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: 4.0.6
+    description: A Helm chart for Wraft application deployment with improved organization
+      and maintainability
+    digest: 21d68ab9a2659d5ecf5c0a49793ac16da52c23fdac5d15f02936a564c791dab2
+    home: https://github.com/wraft/wraft-helm
+    keywords:
+    - wraft
+    - application
+    - deployment
+    maintainers:
+    - email: salsabeel@functionary.co
+      name: Salsabeel
+    name: wraft
+    sources:
+    - https://github.com/wraft/wraft-helm
+    type: application
+    urls:
+    - https://wraft.github.io/charts/wraft-0.1.6.tgz
+    version: 0.1.6
+  - annotations:
+      artifacthub.io/changes: |
+        - Added CONTRIBUTING.md with comprehensive guidelines for contributors
+        - Improved validation script to work without requiring a Kubernetes cluster
+      artifacthub.io/links: |
+        - name: Changelog
+          url: https://github.com/wraft/wraft-helm/blob/main/CHANGELOG.md
+      artifacthub.io/maintainers: |
         - name: Wraft Team
           email: wraftteam@wraft.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-06-24T13:15:26.301157778Z"
+    created: "2025-06-24T14:30:20.184423001Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -36,4 +71,4 @@ entries:
     urls:
     - https://wraft.github.io/charts/wraft-0.1.5.tgz
     version: 0.1.5
-generated: "2025-06-24T13:15:26.296890764Z"
+generated: "2025-06-24T14:30:20.178854843Z"
