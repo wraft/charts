@@ -1,0 +1,5 @@
+repositoryID: 3c23aefe-3fae-4664-b0d1-949ce3ebf27e
+owners:
+  - name: salsabeel
+    email: salsabeel@functionary.co
+ignoreHelmChartErrors: false 
