@@ -1,5 +1,7 @@
 # Wraft Charts
 
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/wraft)](https://artifacthub.io/packages/helm/wraft/wraft)
+
 Helm charts for deploying Wraft on Kubernetes.
 
 ## Quick Start

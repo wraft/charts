@@ -13,15 +13,15 @@ home: https://github.com/wraft/wraft-helm
 sources:
   - https://github.com/wraft/wraft-helm
 maintainers:
-  - name: Wraft Team
-    email: wraftteam@wraft.co
+  - name: Salsabeel
+    email: salsabeel@functionary.co
 annotations:
   artifacthub.io/changes: |
     - Added CONTRIBUTING.md with comprehensive guidelines for contributors
     - Improved validation script to work without requiring a Kubernetes cluster
   artifacthub.io/maintainers: |
-    - name: Wraft Team
-      email: wraftteam@wraft.co
+    - name: Salsabeel
+      email: salsabeel@functionary.co
   artifacthub.io/links: |
     - name: Changelog
       url: https://github.com/wraft/wraft-helm/blob/main/CHANGELOG.md
