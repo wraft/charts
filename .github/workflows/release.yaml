@@ -19,11 +19,24 @@ jobs:
       # Set up Helm CLI
       - name: Set up Helm
         uses: azure/setup-helm@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Update chart dependencies
       - name: Helm dependency update
         run: |
+          echo "Running helm dependency update..."
           helm dependency update charts/wraft
+          echo "Dependency update completed"
+
+      # Debug: List charts directory contents
+      - name: List charts directory
+        run: |
+          echo "Checking charts directory..."
+          ls -la charts/wraft/ || echo 'No wraft directory'
+          ls -la charts/wraft/charts/ || echo 'No charts directory'
+          echo "Checking for Chart.lock..."
+          cat charts/wraft/Chart.lock || echo 'No Chart.lock file'
 
       # Package the Helm chart
       - name: Package Helm chart
