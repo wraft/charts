@@ -13,7 +13,7 @@ entries:
           email: wraftteam@wraft.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-06-24T08:11:09.829602543Z"
+    created: "2025-06-24T08:43:34.301427541Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -36,4 +36,4 @@ entries:
     urls:
     - https://wraft.github.io/charts/wraft-0.1.5.tgz
     version: 0.1.5
-generated: "2025-06-24T08:11:09.825190217Z"
+generated: "2025-06-24T08:43:34.2972156Z"
