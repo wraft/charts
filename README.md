@@ -6,7 +6,7 @@ Helm charts for deploying Wraft on Kubernetes.
 
 ```bash
 # Add the Wraft Helm repository
-helm repo add wraft https://wraft.github.io/wraft/
+helm repo add wraft https://wraft.github.io/charts
 
 # Install Wraft
 helm install wraft wraft/wraft

@@ -46,7 +46,7 @@ jobs:
       # Generate Helm repo index.yaml
       - name: Create Helm repo index
         run: |
-          helm repo index packaged --url https://wraft.github.io/wraft/
+          helm repo index packaged --url https://wraft.github.io/charts
 
       # Publish packaged charts and index.yaml to GitHub Pages (gh-pages branch)
       - name: Deploy to GitHub Pages
