@@ -64,19 +64,22 @@ spec:
               containerPort: {{ .Values.frontend.service.targetPort }}
               protocol: TCP
           env:
+            {{- if .Values.frontend.env }}
             {{- range $key, $value := .Values.frontend.env }}
             - name: {{ $key }}
-              {{- if kindIs "map" $value }}
-              {{- if hasKey $value "valueFrom" }}
-              valueFrom:
-                {{- $value.valueFrom | toYaml | nindent 16 }}
-              {{- else }}
-              {{- toYaml $value | nindent 14 }}
-              {{- end }}
-              {{- else }}
               value: {{ $value | quote }}
-              {{- end }}
             {{- end }}
+            {{- end }}
+            - name: NEXT_PUBLIC_API_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-frontend-secrets
+                  key: NEXT_PUBLIC_API_HOST
+            - name: NEXT_PUBLIC_WEBSOCKET_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-frontend-secrets
+                  key: NEXT_PUBLIC_WEBSOCKET_URL
           {{- if .Values.frontend.envFrom }}
           envFrom:
             {{- toYaml .Values.frontend.envFrom | nindent 12 }}
