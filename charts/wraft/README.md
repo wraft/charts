@@ -52,21 +52,24 @@ For a complete list of parameters, please refer to the [values.yaml](values.yaml
 
 ### Environment Variables
 
-| Name                | Type                                                                     | Default Value     |
-| ------------------- | ------------------------------------------------------------------------ | ----------------- |
-| `DOMAIN`            | Domain suffix for ingress routing, service exposure, or SSL termination. | `"local"`         |
-| `NAMESPACE`         | K8s namespace                                                            | `""`              |
-| `XELATEX_PATH`      | Path to XeLaTeX binary.                                                  | `"xelatex"`       |
-| `SENTRY_DSN`        | Sentry error tracking                                                    | `""`              |
-| `MIX_ENV`           | Elixir runtime mode                                                      | `"dev"`           |
-| `SECRET_KEY_BASE`   | Signing key for session & encryption.                                    | `"Auto-Generate"` |
-| `GUARDIAN_KEY`      | signing key used by secutiry                                             | `"Auto-Generate"` |
-| `DATABASE_URL`      | Full DB connection string.                                               | `""`              |
-| `POSTGRES_USER`     | DB admin username.                                                       | `"postgres"`      |
-| `POSTGRES_PASSWORD` | DB admin password.                                                       | `""`              |
-| `POSTGRES_DB`       | DB name.                                                                 | `"wraft-data"`    |
-| `MINIO_BUCKET`      | Bucket name for MinIO.                                                   | `"wraft"`         |
-| `TYPESENSE_API_KEY` | API key for secure access to Typesense.                                  | `""`              |
+| Name                        | Type                                                                     | Default Value     |
+| --------------------------- | ------------------------------------------------------------------------ | ----------------- |
+| `DOMAIN`                    | Domain suffix for ingress routing, service exposure, or SSL termination. | `"local"`         |
+| `NAMESPACE`                 | K8s namespace                                                            | `""`              |
+| `XELATEX_PATH`              | Path to XeLaTeX binary.                                                  | `"xelatex"`       |
+| `SENTRY_DSN`                | Sentry error tracking                                                    | `""`              |
+| `MIX_ENV`                   | Elixir runtime mode                                                      | `"dev"`           |
+| `SECRET_KEY_BASE`           | Signing key for session & encryption.                                    | `"Auto-Generate"` |
+| `GUARDIAN_KEY`              | signing key used by secutiry                                             | `"Auto-Generate"` |
+| `DATABASE_URL`              | Full DB connection string.                                               | `""`              |
+| `POSTGRES_USER`             | DB admin username.                                                       | `"postgres"`      |
+| `POSTGRES_PASSWORD`         | DB admin password.                                                       | `""`              |
+| `POSTGRES_DB`               | DB name.                                                                 | `"wraft-data"`    |
+| `MINIO_BUCKET`              | Bucket name for MinIO.                                                   | `"wraft"`         |
+| `TYPESENSE_API_KEY`         | API key for secure access to Typesense.                                  | `""`              |
+| `CLOAK_KEY`                 | secret key to encrypt or mask (“cloak”) sensitive data.                  | `"Auto-Generate"` |
+| `NEXT_PUBLIC_API_HOST`      | Baseurl of backend Api.                                                  | `""`              |
+| `NEXT_PUBLIC_WEBSOCKET_URL` | secure WebSocket.                                                        | `""`              |
 
 ## Manual Installation
 
@@ -96,18 +99,11 @@ helm install wraft . --set replicaCount=3 --set service.type=LoadBalancer
 
 ### Post-Installation Setup
 
-#### Port-Forward Backend Pod
-
-```bash
-# Allow the frontend to connect to the backend service
-kubectl port-forward pod/$(kubectl get pods -l app=wraft-backend -o jsonpath="{.items[0].metadata.name}") 4000:4000
-```
-
 #### Update /etc/hosts
 
 ```bash
 # Add your node IP and ingress hostname to ensure MinIO functions correctly
-echo "$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')  minio-api.local" | sudo tee -a /etc/hosts
+echo "$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')  minio-api.local api.local" | sudo tee -a /etc/hosts
 ```
 
 ## Quick Start
