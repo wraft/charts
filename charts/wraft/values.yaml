@@ -68,7 +68,7 @@ global:
 env:
   POSTGRES_USER: 'postgres'
   POSTGRES_PASSWORD: 'postgres'
-  POSTGRES_DB: 'wraft_data'
+  POSTGRES_DB: 'wraft_temp'
   DB_HOST: 'wraft-db'
   DB_PORT: '5432'
   MINIO_SERVICE_NAME: 'wraft-minio'
@@ -105,6 +105,9 @@ frontend:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0
+  # Environment variables
+  NEXT_PUBLIC_API_HOST: 'http://api.local:30080'
+  NEXT_PUBLIC_WEBSOCKET_URL: 'ws://api.local:30080'
   # Container image configuration
   image:
     repository: quay.io/wraft/wraft-frontend
@@ -202,7 +205,7 @@ backend:
   # Container image configuration
   image:
     repository: quay.io/wraft/wraft
-    tag: v0.1.2
+    tag: v0.1.30
     pullPolicy: IfNotPresent
     # digest: "sha256:abcdef..."  # For immutable deployments
   # Service configuration
@@ -214,12 +217,16 @@ backend:
   env:
     MIX_ENV: 'prod'
     # Database connection string - will be templated in the deployment
-    DATABASE_URL: 'postgres://postgres:postgres@wraft-db:5432/wraft_data?ssl=false'
+    DATABASE_URL: 'postgres://postgres:postgres@wraft-db:5432/wraft_temp?ssl=false'
     MINIO_URL: 'http://minio-api.local:30080'
     MINIO_HOST: 'minio-api.local'
     MINIO_PORT: '30080'
     MINIO_BUCKET: 'wraft'
     SENTRY_DSN: 'https://public_key@app.getsentry.com/1'
+    PADDLE_API_KEY: ''
+    PADDLE_BASE_URL: ''
+    PADDLE_WEBHOOK_SECRET_KEY: ''
+    RESEND_API_KEY: 'your_resend_api_key_here'
     XELATEX_PATH: 'xelatex'
     TYPESENSE_HOST: 'wraft-typesense'
   # Resource allocation
@@ -345,7 +352,7 @@ db:
   env:
     POSTGRES_USER: 'postgres'
     POSTGRES_PASSWORD: 'postgres' # Will be auto-generated if empty
-    POSTGRES_DB: 'wraft_data'
+    POSTGRES_DB: 'wraft_temp'
   # Persistence configuration
   persistence:
     enabled: true
