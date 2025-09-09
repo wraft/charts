@@ -78,9 +78,3 @@ spec:
               echo "🎉 Migration and seeding completed successfully"
           resources:
             {{- toYaml .Values.backend.migration.resources | nindent 12 }}
-
-
-
-
-
-
