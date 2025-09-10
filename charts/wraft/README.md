@@ -174,7 +174,7 @@ For major version upgrades, please check the [Changelog](#changelog) for any bre
 
 ## Contributing
 
-We welcome contributions to improve the Wraft Helm chart! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+We welcome contributions to improve the Wraft Helm chart! Please read our [Contributing Guidelines](../../CONTRIBUTING.md) for details on:
 
 - Code of Conduct
 - Development Workflow
@@ -182,12 +182,12 @@ We welcome contributions to improve the Wraft Helm chart! Please read our [Contr
 - Pull Request Process
 - Documentation Requirements
 
-We also maintain [Conventions](CONVENTIONS.md) for consistent chart development.
+We also maintain [Conventions](../../CONVENTIONS.md) for consistent chart development.
 
 ## Changelog
 
-We maintain a changelog to document notable changes to the Wraft Helm chart. View the full changelog here: [CHANGELOG.md](CHANGELOG.md)
+We maintain a changelog to document notable changes to the Wraft Helm chart. View the full changelog here: [CHANGELOG.md](../../CHANGELOG.md)
 
 ## License
 
-This chart is licensed under the terms found in the [LICENSE](LICENSE) file at the root of this repository.
+This chart is licensed under the terms found in the [LICENSE](../../LICENSE) file at the root of this repository.
