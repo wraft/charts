@@ -18,7 +18,7 @@ helm install wraft wraft/wraft
 
 ```bash
 # Install specific version
-helm install wraft wraft/wraft --version 0.1.2
+helm install wraft wraft/wraft --version 0.1.7
 
 # Install with custom values
 helm install wraft wraft/wraft --values my-values.yaml
@@ -46,4 +46,4 @@ helm install wraft wraft/wraft --namespace wraft --create-namespace
 
 - [Chart Documentation](charts/wraft/README.md)
 - [Contributing](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md) 
+- [Changelog](CHANGELOG.md)
