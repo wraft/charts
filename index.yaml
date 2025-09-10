@@ -13,7 +13,7 @@ entries:
           email: salsabeel@functionary.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-06-24T14:44:33.346370252Z"
+    created: "2025-09-10T13:26:27.291714152Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -48,7 +48,7 @@ entries:
           email: salsabeel@functionary.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-06-24T14:44:33.341267495Z"
+    created: "2025-09-10T13:26:27.286938082Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -83,7 +83,7 @@ entries:
           email: wraftteam@wraft.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-06-24T14:44:33.336269219Z"
+    created: "2025-09-10T13:26:27.282428378Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -106,4 +106,4 @@ entries:
     urls:
     - https://wraft.github.io/charts/wraft-0.1.5.tgz
     version: 0.1.5
-generated: "2025-06-24T14:44:33.332039121Z"
+generated: "2025-09-10T13:26:27.278284595Z"
