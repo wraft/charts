@@ -2,7 +2,7 @@ apiVersion: v2
 name: wraft
 description: A Helm chart for Wraft application deployment with improved organization and maintainability
 type: application
-version: 0.1.7
+version: 0.1.11
 appVersion: '1.0.0'
 # Additional metadata
 keywords:
