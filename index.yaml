@@ -13,7 +13,42 @@ entries:
           email: salsabeel@functionary.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-09-10T13:26:27.291714152Z"
+    created: "2025-09-15T08:49:17.149032031Z"
+    dependencies:
+    - name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: 4.0.6
+    description: A Helm chart for Wraft application deployment with improved organization
+      and maintainability
+    digest: a83841aa130225fee55355fcc7a6b02ef3fd89c23783ddcbd384e11eece0fec3
+    home: https://github.com/wraft/wraft-helm
+    keywords:
+    - wraft
+    - application
+    - deployment
+    maintainers:
+    - email: salsabeel@functionary.co
+      name: Salsabeel
+    name: wraft
+    sources:
+    - https://github.com/wraft/wraft-helm
+    type: application
+    urls:
+    - https://wraft.github.io/charts/wraft-0.1.11.tgz
+    version: 0.1.11
+  - annotations:
+      artifacthub.io/changes: |
+        - Added CONTRIBUTING.md with comprehensive guidelines for contributors
+        - Improved validation script to work without requiring a Kubernetes cluster
+      artifacthub.io/links: |
+        - name: Changelog
+          url: https://github.com/wraft/wraft-helm/blob/main/CHANGELOG.md
+      artifacthub.io/maintainers: |
+        - name: Salsabeel
+          email: salsabeel@functionary.co
+    apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-09-15T08:49:17.162382751Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -48,7 +83,7 @@ entries:
           email: salsabeel@functionary.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-09-10T13:26:27.286938082Z"
+    created: "2025-09-15T08:49:17.157899612Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -83,7 +118,7 @@ entries:
           email: wraftteam@wraft.co
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-09-10T13:26:27.282428378Z"
+    created: "2025-09-15T08:49:17.153721202Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -106,4 +141,4 @@ entries:
     urls:
     - https://wraft.github.io/charts/wraft-0.1.5.tgz
     version: 0.1.5
-generated: "2025-09-10T13:26:27.278284595Z"
+generated: "2025-09-15T08:49:17.144776896Z"
