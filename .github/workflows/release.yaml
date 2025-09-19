@@ -28,30 +28,14 @@ jobs:
 
       - name: Fetch existing charts from gh-pages
         run: |
-          # Create a temporary directory for existing charts
           mkdir -p .cr-existing-packages
-          
-          # Store the current commit SHA to return to it later
-          ORIGINAL_SHA=$(git rev-parse HEAD)
-          
-          # Try to fetch existing charts from gh-pages branch
           if git ls-remote --exit-code --heads origin gh-pages; then
             echo "gh-pages branch exists, fetching existing charts..."
-            git fetch origin gh-pages || true
-            git checkout FETCH_HEAD || true
-            
-            # Copy existing .tgz files if they exist
-            if ls *.tgz 1> /dev/null 2>&1; then
-              cp *.tgz .cr-existing-packages/ || true
-            fi
-            
-            # Copy existing index.yaml if it exists
-            if [ -f index.yaml ]; then
-              cp index.yaml .cr-existing-packages/ || true
-            fi
-            
-            # Switch back to original commit
-            git checkout $ORIGINAL_SHA
+            git fetch origin gh-pages:gh-pages || true
+            git worktree add /tmp/gh-pages gh-pages
+            cp /tmp/gh-pages/*.tgz .cr-existing-packages/ 2>/dev/null || true
+            cp /tmp/gh-pages/index.yaml .cr-existing-packages/ 2>/dev/null || true
+            git worktree remove /tmp/gh-pages --force
           else
             echo "gh-pages branch doesn't exist yet, this will be the first release"
           fi
@@ -68,13 +52,13 @@ jobs:
         run: |
           # Generate index.yaml for all charts (existing + new)
           helm repo index .cr-release-packages --url https://wraft.github.io/charts
-          
+
           # If there was an existing index.yaml, merge it with the new one
           if [ -f .cr-existing-packages/index.yaml ]; then
             echo "Merging with existing index.yaml..."
             helm repo index .cr-release-packages --url https://wraft.github.io/charts --merge .cr-existing-packages/index.yaml
           fi
-          
+
           # Add .nojekyll file to disable Jekyll processing
           touch .cr-release-packages/.nojekyll
 
@@ -85,7 +69,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: .cr-release-packages
-          keep_files: false  # We're manually managing files, so don't keep old ones
+          keep_files: false # We're manually managing files, so don't keep old ones
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
