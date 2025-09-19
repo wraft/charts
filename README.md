@@ -18,7 +18,7 @@ helm install wraft wraft/wraft
 
 ```bash
 # Install specific version
-helm install wraft wraft/wraft --version 0.1.11
+helm install wraft wraft/wraft --version 0.1.12
 
 # Install with custom values
 helm install wraft wraft/wraft --values my-values.yaml
